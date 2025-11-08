@@ -1,6 +1,6 @@
-# sacs.yaml (V3 - Syntactically Safe Version)
+# sacs.yaml (V4 - Platform Geometry Optimization)
 description: |
-  You are an expert SACS optimization bot. Your mission is to find a diverse set of optimal jacket structures by modifying their geometry to explore the trade-offs between weight and stress (UC values). Think like an architect to propose conceptually different designs.
+  You are an expert SACS optimization bot. Your mission is to find a diverse set of optimal platform structures by modifying their geometry (joint locations) to explore the trade-offs between weight and stress (UC values). Think like an architect to propose conceptually different designs.
 
 # --- Objective Definitions ---
 weight: 'Total structural weight in tonnes. Lower is better.'
@@ -15,14 +15,11 @@ example_output: |
   <candidate>
   {
       "new_code_blocks": {
-          "GRUP_DUM": "GRUP DUM         12.000 1.000 29.0011.6036.00 9    1.001.00     0.500N490.00",
-          "GRUP_LG6_1": "GRUP LG6         36.000 0.750 29.0011.0036.00 1    1.001.00     0.500N490.003.25",
-          "GRUP_W01": "GRUP W01 W24X162              29.0111.2035.97 1    1.001.00     0.500 490.00",
           "JOINT_701": "JOINT  701  -25.10 -15.80  50.00                      222000",
           "JOINT_703": "JOINT  703   24.00 -16.00  50.00                      222000",
+          "JOINT_705": "JOINT  705  -24.00  16.00  50.00                      222000",
           "JOINT_801": "JOINT  801  -24.00 -16.00  75.00                      222000",
-          "PGRUP_P01": "PGRUP P01 0.3750I29.000 0.25036.000                                     490.0000",
-          "PGRUP_PLT": "PGRUP PLT 0.2500 29.000 0.25036.000                                     490.0000"
+          "JOINT_803": "JOINT  803   24.00 -16.00  75.00                      222000"
       }
   }
   </candidate>
@@ -34,19 +31,19 @@ mutation_instruction: |
   1. Analyze the parent's performance (weight, axial_uc_max, bending_uc_max).
   
   2. Select a creative strategy from the list below to guide your modification. Do not just move joints randomly; move them to serve a larger architectural concept.
-     - Strategy A: "V-Shape Profile". Make the jacket's legs form a more pronounced V or A shape. A wider base can increase stability (lower UC), while a narrower top can save weight.
-     - Strategy B: "X-Bracing Angles". Adjust joint locations to make cross-bracing angles more or less acute. Angles around 45 degrees are often efficient.
-     - Strategy C: "Tiered Setbacks". Make one elevation (e.g., the 400-level joints) significantly narrower or wider than the levels above or below it.
-     - Strategy D: "Targeted Fix". If the parent has a specific weakness (e.g., high bending_uc_max), propose a targeted geometric change to fix it. For example: "Parent has high bending stress. I will adjust joints 401 and 403 to improve the bracing angle at that level."
+     - Strategy A: "Platform Layout Optimization". Adjust the platform's footprint by modifying base-level joints (6xx series) or top-level joints (8xx, 9xx series). A wider base can increase stability, while optimizing the top layout can reduce weight.
+     - Strategy B: "Support Structure Angles". Adjust joint locations at different elevations (7xx, 8xx series) to optimize bracing angles and support efficiency. Angles around 45 degrees are often efficient.
+     - Strategy C: "Tiered Setbacks". Make one elevation (e.g., the 7xx-level or 8xx-level joints) significantly narrower or wider than the levels above or below it to create a tiered structure.
+     - Strategy D: "Targeted Fix". If the parent has a specific weakness (e.g., high bending_uc_max), propose a targeted geometric change to fix it. For example: "Parent has high bending stress. I will adjust joints 701, 703, 705, 707 to improve the support structure at that level."
 
   3. Based on your chosen strategy, generate the new candidate's code with modified joint coordinates.
 
 crossover_instruction: |
   INSTRUCTION: Perform a THEMATIC CROSSOVER.
 
-  1. Analyze both parents. Identify the best conceptual feature of each. For example, "Parent A has a very wide and stable base (good V-Shape), while Parent B has a very efficient and lightweight top section."
+  1. Analyze both parents. Identify the best conceptual feature of each. For example, "Parent A has a very wide and stable base (6xx level), while Parent B has a very efficient and lightweight top section (8xx, 9xx levels)."
   
-  2. Create a child that hybridizes these concepts. This is not just averaging coordinates; it's about intelligently merging the best architectural ideas from both parents to create a superior child. For instance, combine the wide base coordinates from Parent A with the narrow top section coordinates from Parent B.
+  2. Create a child that hybridizes these concepts. This is not just averaging coordinates; it's about intelligently merging the best architectural ideas from both parents to create a superior child. For instance, combine the wide base coordinates (6xx joints) from Parent A with the optimized top section coordinates (8xx, 9xx joints) from Parent B.
   
   3. Do not modify any GRUP or PGRUP blocks.
 

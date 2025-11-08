@@ -66,7 +66,13 @@ def parse_grup_and_pgrup_from_sacinp(sacinp_path: str) -> dict:
     return properties
 
 def calculate_sacs_weight_from_db(project_path: str) -> dict:
-    sacinp_path = os.path.join(project_path, 'sacinp.demo06')
+    # 自动检测文件格式：优先查找 demo13，然后是 demo06
+    if os.path.exists(os.path.join(project_path, 'sacinp.demo13')):
+        sacinp_path = os.path.join(project_path, 'sacinp.demo13')
+    elif os.path.exists(os.path.join(project_path, 'sacinp.demo06')):
+        sacinp_path = os.path.join(project_path, 'sacinp.demo06')
+    else:
+        sacinp_path = os.path.join(project_path, 'sacinp.demo13')  # 默认使用 demo13
     db_path = os.path.join(project_path, 'sacsdb.db')
 
     if not os.path.exists(db_path):

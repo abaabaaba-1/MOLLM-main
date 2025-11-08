@@ -9,10 +9,18 @@ import logging
 class SacsFileModifier:
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
-        self.input_file = self.project_path / "sacinp.demo06"
+        # 支持多种文件格式：优先查找 demo13，然后是 demo06
+        if (self.project_path / "sacinp.demo13").exists():
+            self.input_file = self.project_path / "sacinp.demo13"
+        elif (self.project_path / "sacinp.demo06").exists():
+            self.input_file = self.project_path / "sacinp.demo06"
+        else:
+            self.input_file = self.project_path / "sacinp.demo13"  # 默认使用 demo13
         self.backup_dir = self.project_path / "backups"
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.backup_dir.mkdir(exist_ok=True)
+        # 确保项目目录存在，然后创建备份目录
+        self.project_path.mkdir(parents=True, exist_ok=True)
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
         if not self.input_file.exists():
             raise FileNotFoundError(f"SACS input file not found: {self.input_file}")
 
@@ -20,7 +28,9 @@ class SacsFileModifier:
         """Creates a backup of the current input file."""
         try:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}.demo06"
+            # 根据输入文件扩展名确定备份文件扩展名
+            file_ext = self.input_file.suffix
+            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}{file_ext}"
             shutil.copy2(self.input_file, backup_path)
             self.logger.info(f"Created backup: {backup_path.name}")
             return backup_path
@@ -84,11 +94,40 @@ class SacsFileModifier:
             lines_replaced = 0
             for identifier, new_line in new_code_blocks.items():
                 parts = identifier.split('_')
-                if len(parts) != 2:
-                    self.logger.warning(f"Invalid identifier format '{identifier}'. Skipping.")
+                if len(parts) < 2:
+                    self.logger.warning(f"Invalid identifier format '{identifier}'. Expected format: 'GRUP_ID' or 'PGRUP_ID'. Skipping.")
                     continue
                 
-                keyword, id_val = parts
+                # 对于多部分标识符（如 GRUP_LG6_2），合并后面的部分
+                keyword = parts[0]  # GRUP 或 PGRUP
+                id_val = '_'.join(parts[1:])  # 处理 ID 中可能包含下划线的情况
+                
+                # 如果 id_val 包含数字后缀（如 "LG6_2"），需要特殊处理匹配
+                # 对于 "GRUP_LG6_2"，匹配 "GRUP LG6" 的第二个出现
+                if '_' in id_val and id_val.split('_')[-1].isdigit():
+                    # 分离基础ID和序号
+                    base_id = '_'.join(id_val.split('_')[:-1])
+                    match_index = int(id_val.split('_')[-1]) - 1  # 转换为0-based索引
+                    
+                    # 查找所有匹配的行
+                    pattern = re.compile(r"^\s*" + re.escape(keyword) + r"\s+" + re.escape(base_id))
+                    matches = []
+                    for i, line in enumerate(lines):
+                        if pattern.search(line) and 'CONE' not in line:  # 排除 CONE 类型
+                            matches.append(i)
+                    
+                    # 选择指定索引的匹配行
+                    if 0 <= match_index < len(matches):
+                        line_idx = matches[match_index]
+                        self.logger.info(f"Replacing block '{identifier}' (match #{match_index + 1}) in {file_to_modify.name}:\n  OLD: {lines[line_idx].strip()}\n  NEW: {new_line.strip()}")
+                        lines[line_idx] = new_line + '\n'
+                        lines_replaced += 1
+                        continue
+                    else:
+                        self.logger.warning(f"Identifier '{identifier}' - match index {match_index} out of range (found {len(matches)} matches). Skipping.")
+                        continue
+                
+                # 标准匹配：关键词后跟空格，然后是ID
                 pattern = re.compile(r"^\s*" + re.escape(keyword) + r"\s+" + re.escape(id_val))
                 
                 line_found_and_replaced = False

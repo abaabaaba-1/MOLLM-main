@@ -33,25 +33,41 @@ class SacsRunner:
         """
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        wsl_project_path_str = project_path
+        wsl_project_path_str = project_path or "/mnt/d/wsl_sacs_exchange/sacs_project/Demo13_Geo"
         win_sacs_install_path_str = sacs_install_path or r"C:\Program Files (x86)\Bentley\Engineering\SACS CONNECT Edition V16 Update 1"
 
         self.project_path: Path = Path(wsl_project_path_str)
         self.win_sacs_install_path_str: str = win_sacs_install_path_str
 
+        # 自动检测项目文件格式（demo13 或 demo06）
+        if (self.project_path / "static.demo13.runx").exists():
+            self.project_suffix = "demo13"
+        elif (self.project_path / "demo13.runx").exists():
+            self.project_suffix = "demo13"
+        elif (self.project_path / "static.demo06.runx").exists():
+            self.project_suffix = "demo06"
+        else:
+            self.project_suffix = "demo13"  # 默认使用 demo13
+
         try:
             self.win_project_path_str: str = self._wsl_to_windows_path(self.project_path)
-            self.win_runx_path_str: str = self._wsl_to_windows_path(self.project_path / "static.demo13.runx")
+            # 尝试多个可能的 runx 文件名
+            if (self.project_path / f"static.{self.project_suffix}.runx").exists():
+                self.win_runx_path_str: str = self._wsl_to_windows_path(self.project_path / f"static.{self.project_suffix}.runx")
+            elif (self.project_path / f"{self.project_suffix}.runx").exists():
+                self.win_runx_path_str: str = self._wsl_to_windows_path(self.project_path / f"{self.project_suffix}.runx")
+            else:
+                raise FileNotFoundError(f"找不到 runx 文件: static.{self.project_suffix}.runx 或 {self.project_suffix}.runx")
             self.wsl_engine_path_str: str = self._windows_to_wsl_path(
                 f"{self.win_sacs_install_path_str}\\AnalysisEngine.exe")
         except Exception as e:
             self.logger.error(f"路径转换失败: {e}")
             raise RuntimeError("路径转换失败，请确保在WSL环境中运行，并且`wslpath`命令可用。") from e
 
-        self.input_file: Path = self.project_path / "sacinp.demo13"
+        self.input_file: Path = self.project_path / f"sacinp.{self.project_suffix}"
         self.db_file: Path = self.project_path / "sacsdb.db"
         self.backup_dir: Path = self.project_path / "backups"
-        self.backup_dir.mkdir(exist_ok=True)
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
         self._verify_wsl_environment()
 
         self.logger.info(f"SacsRunner 初始化成功。项目路径 (WSL): {self.project_path}")

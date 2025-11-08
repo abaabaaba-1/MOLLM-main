@@ -9,10 +9,18 @@ import logging
 class SacsFileModifier:
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
-        self.input_file = self.project_path / "sacinp.demo13"
+        # 支持多种文件格式：优先查找 demo13，然后是 demo06
+        if (self.project_path / "sacinp.demo13").exists():
+            self.input_file = self.project_path / "sacinp.demo13"
+        elif (self.project_path / "sacinp.demo06").exists():
+            self.input_file = self.project_path / "sacinp.demo06"
+        else:
+            self.input_file = self.project_path / "sacinp.demo13"  # 默认使用 demo13
         self.backup_dir = self.project_path / "backups"
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.backup_dir.mkdir(exist_ok=True)
+        # 确保项目目录存在，然后创建备份目录
+        self.project_path.mkdir(parents=True, exist_ok=True)
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
         if not self.input_file.exists():
             raise FileNotFoundError(f"SACS input file not found: {self.input_file}")
 
@@ -20,7 +28,9 @@ class SacsFileModifier:
         """Creates a backup of the current input file."""
         try:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}.demo13"
+            # 根据输入文件扩展名确定备份文件扩展名
+            file_ext = self.input_file.suffix
+            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}{file_ext}"
             shutil.copy2(self.input_file, backup_path)
             self.logger.info(f"Created backup: {backup_path.name}")
             return backup_path

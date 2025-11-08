@@ -47,7 +47,8 @@ class VmecFileModifier:
                 content = f.read()
             
             # 正则表达式匹配 RBC(m,n)=value 和 ZBS(m,n)=value
-            pattern = re.compile(r"([RZ]BS\s*\(\s*[-]?\d+\s*,\s*[-]?\d+\s*\)\s*=\s*([-+]?\d+\.\d+e[-+]?\d+))", re.IGNORECASE)
+            # 注意：[RZ]B[CS] 匹配 RBC、RBS、ZBC、ZBS
+            pattern = re.compile(r"([RZ]B[CS]\s*\(\s*[-]?\d+\s*,\s*[-]?\d+\s*\)\s*=\s*([-+]?\d+\.\d+e[-+]?\d+))", re.IGNORECASE)
             
             matches = pattern.finditer(content)
             
@@ -85,8 +86,9 @@ class VmecFileModifier:
                 # 规范化 key，例如 "RBC( 1, 0)" -> "RBC(1,0)"
                 norm_key = key.strip().replace(" ", "")
                 
-                # 匹配 "RBC(1,0)"
-                match_key = re.match(r"([RZ]BS)\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", norm_key)
+                # 匹配 "RBC(1,0)" 或 "ZBS(1,0)" 等
+                # 注意：[RZ]B[CS] 匹配 RBC、RBS、ZBC、ZBS
+                match_key = re.match(r"([RZ]B[CS])\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", norm_key, re.IGNORECASE)
                 if not match_key:
                     self.logger.warning(f"Invalid coefficient key format: '{key}'. Skipping.")
                     continue

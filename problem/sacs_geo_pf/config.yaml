@@ -1,9 +1,9 @@
 # config.yaml (Corrected Indentation)
 
-exper_name: "Platform_Joint_Optimization"
-description: "Optimizing SACS 'Demo 01' platform structure by modifying all 6xx, 7xx, and 8xx joint coordinates"
+exper_name: "SACS_Platform_Geometry_Optimization"
+description: "Optimizing SACS platform structure geometry (joint locations) using a 3-objective approach: weight, max_axial_uc, and max_bending_uc."
 save_dir: "./moo_results/"
-save_suffix: "sacs_platform_joint"
+save_suffix: "sacs_geo_pf"
 
 resume: False
 
@@ -26,18 +26,21 @@ prompt_info_path: ./problem/sacs_geo_pf/sacs.yaml
 evalutor_path: problem.sacs_geo_pf.evaluator
 
 sacs:
-  project_path: "/mnt/d/wsl_sacs_exchange/sacs_project/Demo13_Geo/"
+  project_path: "/mnt/d/wsl_sacs_exchange/sacs_project/Demo13_Geo"
   install_path: "C:\\Program Files (x86)\\Bentley\\Engineering\\SACS CONNECT Edition V16 Update 1"
-  
+
   # This list is now empty to focus on geometry optimization, as discussed.
   optimizable_blocks: []
 
   # --- Optimizable joint coordinates ---
+  # 基于 sacinp13 - 副本.txt 文件中的节点
   optimizable_joints:
+    # 6xx 系列节点 (底部层)
     - "JOINT 601"
     - "JOINT 603"
     - "JOINT 605"
     - "JOINT 607"
+    # 7xx 系列节点 (中间层)
     - "JOINT 701"
     - "JOINT 703"
     - "JOINT 705"
@@ -55,6 +58,7 @@ sacs:
     - "JOINT 722"
     - "JOINT 723"
     - "JOINT 724"
+    # 8xx 系列节点 (顶层)
     - "JOINT 801"
     - "JOINT 803"
     - "JOINT 805"
@@ -80,9 +84,32 @@ sacs:
     - "JOINT 847"
     - "JOINT 848"
     - "JOINT 849"
+    # 9xx 系列节点 (上层结构)
+    - "JOINT 903"
+    - "JOINT 936"
+    - "JOINT 937"
+    - "JOINT 938"
+    - "JOINT 939"
+    - "JOINT 940"
+    - "JOINT 941"
+    - "JOINT 942"
+    - "JOINT 943"
+    - "JOINT 944"
+    - "JOINT 945"
+    - "JOINT 946"
+    - "JOINT 947"
+    - "JOINT 948"
+    - "JOINT 949"
+    - "JOINT 950"
+    - "JOINT 951"
+    - "JOINT 952"
+
+  # --- Joints with coupled coordinates ---
+  # 目前文件中未发现明显的耦合节点关系，如有需要可以在此添加
   coupled_joints: {}
+
 optimization:
-  pop_size: 100
+  pop_size: 40
   eval_budget: 5000
   log_freq: 100
   mutation_strategy:

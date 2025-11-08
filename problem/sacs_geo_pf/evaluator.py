@@ -146,9 +146,15 @@ def _get_initial_joint_definitions(config: dict) -> dict:
         logging.error("Config missing 'sacs.project_path'.")
         return {}
 
-    # Using 'sacinp.demo06' to be consistent with SacsFileModifier.
-    sacs_file = Path(sacs_file_path) / "sacinp.demo13"
-
+    # 自动检测文件格式：优先查找 demo13，然后是 demo06
+    project_path = Path(sacs_file_path)
+    if (project_path / "sacinp.demo13").exists():
+        sacs_file = project_path / "sacinp.demo13"
+    elif (project_path / "sacinp.demo06").exists():
+        sacs_file = project_path / "sacinp.demo06"
+    else:
+        sacs_file = project_path / "sacinp.demo13"  # 默认使用 demo13
+        logging.warning(f"未找到 sacinp.demo13 或 sacinp.demo06，使用默认: {sacs_file}")
 
     optimizable_joints_list = config.get('sacs.optimizable_joints', [])
     coupled_joints_map = config.get('sacs.coupled_joints', {})
@@ -175,25 +181,9 @@ def _get_initial_joint_definitions(config: dict) -> dict:
     return joint_lines
 
 
+# 基线种子（空字典，节点定义将从 SACS 文件中自动读取）
 SEED_BASELINE = {
-    "new_code_blocks": {
-        "GRUP_DUM": "GRUP DUM         12.000 1.000 29.0011.6036.00 9    1.001.00     0.500N490.00",
-        "GRUP_LG6_1": "GRUP LG6         36.000 0.750 29.0011.0036.00 1    1.001.00     0.500N490.003.25",
-        "GRUP_LG6_CONE": "GRUP LG6 CONE                 29.0011.6036.00 1    1.001.00     0.500N490.004.95",
-        "GRUP_LG6_2": "GRUP LG6         26.000 0.750 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_LG7": "GRUP LG7         26.000 0.750 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_SHF": "GRUP SHF          4.000 1.000 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_SK2": "GRUP SK2 W8X24                29.0011.6036.00 1    1.001.00     0.500N1.00-2",
-        "GRUP_SKD": "GRUP SKD W12X30               29.0011.6036.00 1    1.001.00     0.500N1.00-2",
-        "GRUP_STB": "GRUP STB          6.000 1.000 29.0011.6036.00 9    1.001.00     0.500N1.00-2",
-        "GRUP_VB1": "GRUP VB1         12.750 0.625 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_VB2": "GRUP VB2          8.825 0.500 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_VBS": "GRUP VBS         12.750 0.625 29.0011.6036.00 1    1.001.00     0.500N490.00",
-        "GRUP_W01": "GRUP W01 W24X162              29.0111.2035.97 1    1.001.00     0.500 490.00",
-        "GRUP_W02": "GRUP W02 W24X131              29.0111.2035.97 1    1.001.00     0.500 490.00",
-        "PGRUP_P01": "PGRUP P01 0.3750I29.000 0.25036.000                                     490.0000",
-        "PGRUP_PLT": "PGRUP PLT 0.2500 29.000 0.25036.000                                     490.0000"
-    }
+    "new_code_blocks": {}
 }
 
 def generate_initial_population(config, seed):
@@ -293,7 +283,21 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
 
-                if not self.modifier.replace_code_blocks(new_code_blocks):
+                # 对于几何优化，只允许修改 JOINT，不允许修改 GRUP/PGRUP（截面优化专用）
+                filtered_blocks = {}
+                for key, value in new_code_blocks.items():
+                    # 只允许 JOINT_* 开头的块
+                    if key.startswith('JOINT_'):
+                        filtered_blocks[key] = value
+                    else:
+                        self.logger.warning(f"过滤掉非几何优化块: {key} (几何优化只允许 JOINT)")
+                
+                if not filtered_blocks:
+                    self._assign_penalty(item, "No valid joint blocks (JOINT) found in candidate")
+                    invalid_num += 1
+                    continue
+
+                if not self.modifier.replace_code_blocks(filtered_blocks):
                     self._assign_penalty(item, "SACS file modification failed")
                     invalid_num += 1
                     continue
