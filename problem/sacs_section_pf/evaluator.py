@@ -5,6 +5,7 @@ import logging
 import random
 import copy
 import re
+from pathlib import Path
 
 from .sacs_file_modifier import SacsFileModifier
 from .sacs_runner import SacsRunner
@@ -111,6 +112,51 @@ def _parse_and_modify_line(line: str, block_name: str) -> str:
         
     return line.rstrip()
 
+
+def _get_coords_from_modified_line(modified_line: str) -> dict:
+    """Extracts XYZ coordinates from a JOINT* line; used when enforcing couplings."""
+    try:
+        num_pattern = re.compile(r'-?\d+\.\d*(?:[eE][-+]?\d+)?')
+        all_numbers = [float(n) for n in num_pattern.findall(modified_line)]
+        if len(all_numbers) < 3:
+            return None
+        return {'x': all_numbers[0], 'y': all_numbers[1], 'z': all_numbers[2]}
+    except Exception:
+        return None
+
+
+def _build_slave_joint_line(original_slave_line: str, master_coords: dict) -> str:
+    """Rebuilds a slave joint line so it matches master coordinates while preserving formatting."""
+    try:
+        num_pattern = re.compile(r'-?\d+\.\d*(?:[eE][-+]?\d+)?')
+        matches = list(num_pattern.finditer(original_slave_line))
+        if len(matches) < 3:
+            return original_slave_line.rstrip()
+
+        replacements = [
+            {'match': matches[0], 'value': master_coords['x']},
+            {'match': matches[1], 'value': master_coords['y']},
+            {'match': matches[2], 'value': master_coords['z']},
+        ]
+
+        line_editor = list(original_slave_line)
+        for rep in reversed(replacements):
+            match = rep['match']
+            value = rep['value']
+            original_text = match.group(0)
+            original_len = len(original_text)
+            precision = len(original_text.split('.')[1]) if '.' in original_text else 0
+            format_spec = f">{original_len}.{precision}f"
+            new_text = format(value, format_spec)
+            if len(new_text) > original_len:
+                new_text = new_text[:original_len]
+            start, end = match.span()
+            line_editor[start:end] = list(new_text)
+
+        return "".join(line_editor).rstrip()
+    except Exception:
+        return original_slave_line.rstrip()
+
 def generate_initial_population(config, seed):
     np.random.seed(seed)
     random.seed(seed)
@@ -163,11 +209,21 @@ class RewardingSystem:
         self.runner = SacsRunner(project_path=self.sacs_project_path, sacs_install_path=config.get('sacs.install_path'))
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
+        self.coupled_joints = config.get('sacs.coupled_joints', {}) or {}
 
     def evaluate(self, items):
         invalid_num = 0
         for item in items:
+            wrote_candidate = False
             try:
+                try:
+                    self.modifier.restore_baseline()
+                except Exception as baseline_err:
+                    self.logger.error(f"Failed to restore baseline before evaluation: {baseline_err}")
+                    self._assign_penalty(item, "Baseline_Restore_Fail")
+                    invalid_num += 1
+                    continue
+
                 raw_value = item.value
                 try:
                     if 'candidate' in raw_value:
@@ -198,12 +254,19 @@ class RewardingSystem:
                     self._assign_penalty(item, "No valid section blocks (GRUP/PGRUP) found in candidate")
                     invalid_num += 1
                     continue
-                
+
+                filtered_blocks = self._apply_coupled_joint_constraints(filtered_blocks)
+
                 if not self.modifier.replace_code_blocks(filtered_blocks):
                     self._assign_penalty(item, "SACS file modification failed")
                     invalid_num += 1
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after modification failure: {cleanup_err}")
                     continue
 
+                wrote_candidate = True
                 analysis_result = self.runner.run_analysis(timeout=300)
                 
                 if not analysis_result.get('success'):
@@ -248,6 +311,12 @@ class RewardingSystem:
                 self.logger.critical(f"Unhandled exception during item evaluation: {e}", exc_info=True)
                 self._assign_penalty(item, f"Critical_Eval_Error: {e}")
                 invalid_num += 1
+            finally:
+                if wrote_candidate:
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after evaluation: {cleanup_err}")
 
         return items, { "invalid_num": invalid_num, "repeated_num": 0 }
 
@@ -311,3 +380,63 @@ class RewardingSystem:
             transformed[key] = np.clip(val, 0.0, 1.0)
             
         return transformed
+
+    def _apply_coupled_joint_constraints(self, candidate_blocks: dict) -> dict:
+        """
+        Section problems seldom edit joints, but if coupled joint definitions exist we keep
+        master/slave nodes synchronized so future JSON payloads cannot desync them.
+        """
+        if not candidate_blocks or not self.coupled_joints:
+            return candidate_blocks
+
+        enforced_blocks = dict(candidate_blocks)
+        required_joint_keys = {
+            f"JOINT_{joint_id}"
+            for ids in self.coupled_joints.items()
+            for joint_id in ids
+        }
+        missing_keys = [k for k in required_joint_keys if k not in enforced_blocks]
+        baseline_lines = self._load_joint_lines_from_file(missing_keys)
+
+        for master_id, slave_id in self.coupled_joints.items():
+            master_key = f"JOINT_{master_id}"
+            slave_key = f"JOINT_{slave_id}"
+
+            master_line = enforced_blocks.get(master_key) or baseline_lines.get(master_key)
+            slave_line = enforced_blocks.get(slave_key) or baseline_lines.get(slave_key)
+
+            if not master_line:
+                continue
+
+            master_coords = _get_coords_from_modified_line(master_line)
+            if not master_coords:
+                continue
+
+            base_slave_line = slave_line or master_line
+            enforced_blocks[slave_key] = _build_slave_joint_line(base_slave_line, master_coords)
+
+        return enforced_blocks
+
+    def _load_joint_lines_from_file(self, joint_keys) -> dict:
+        if not joint_keys:
+            return {}
+
+        input_path = getattr(self.modifier, "input_file", Path(self.sacs_project_path) / "sacinp.demo13")
+        try:
+            with open(input_path, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+        except FileNotFoundError:
+            return {}
+
+        joint_line_map = {}
+        for joint_key in joint_keys:
+            parts = joint_key.split('_')
+            if len(parts) != 2:
+                continue
+            joint_id = parts[1]
+            pattern = re.compile(r"^\s*JOINT\s+" + re.escape(joint_id))
+            for line in all_lines:
+                if pattern.search(line):
+                    joint_line_map[joint_key] = line.rstrip('\n')
+                    break
+        return joint_line_map

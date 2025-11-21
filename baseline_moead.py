@@ -68,7 +68,7 @@ class SACSProblem(Problem):
         self.history_buffer = [] 
         self.eval_count = 0
         n_obj = len(config.get('goals'))
-        super().__init__(n_vars=1, n_obj=n_obj, n_constr=1, elementwise_evaluation=True, type_vars=object)
+        super().__init__(n_var=1, n_obj=n_obj, n_ieq_constr=0, elementwise=True, vtype=object)
 
     def _evaluate(self, x, out, *args, **kwargs):
         candidate_json_str = x[0]
@@ -78,8 +78,7 @@ class SACSProblem(Problem):
         self.eval_count += 1
         self.history_buffer.append((evaluated_item, self.eval_count))
         out["F"] = np.array(evaluated_item.scores, dtype=float)
-        max_uc = evaluated_item.constraints if evaluated_item.constraints is not None else 999.0
-        out["G"] = [max_uc - 1.0]
+        # Retain max_uc for logging/analysis but rely on the evaluator's penalty instead of pymoo constraints.
 
 # =========================================================================================================
 # Main Runner
@@ -138,16 +137,9 @@ def main():
     # --- 3. Initialize Population ---
     print("Generating initial population...")
     initial_population_strs = generate_initial_population(config, seed)
-    initial_items = [item_factory.create(s) for s in initial_population_strs]
-    
-    evaluated_initial_items, _ = reward_system.evaluate(initial_items)
-    for i, item in enumerate(evaluated_initial_items):
-        item.eval_count = i + 1
 
     # --- 4. Setup Pymoo Algorithm ---
     problem = SACSProblem(reward_system, config, item_factory)
-    problem.history_buffer.extend([(item, item.eval_count) for item in evaluated_initial_items])
-    problem.eval_count = len(evaluated_initial_items)
 
     pop_size = config.get('optimization.pop_size')
     eval_budget = config.get('optimization.eval_budget')
@@ -199,9 +191,9 @@ def main():
             'avg_top1': top100_items[0].total if top100_items else -1,
             'avg_top10': np.mean([item.total for item in top100_items[:10]]) if top100_items else -1,
             'avg_top100': np.mean([item.total for item in top100_items]) if top100_items else -1,
-            'top1_auc': top_auc(subset_buffer, 1, False, log_freq, eval_budget),
-            'top10_auc': top_auc(subset_buffer, 10, False, log_freq, eval_budget),
-            'top100_auc': top_auc(subset_buffer, 100, False, log_freq, eval_budget),
+            'top1_auc': top_auc(subset_buffer, 1, False, 100, eval_budget),
+            'top10_auc': top_auc(subset_buffer, 10, False, 100, eval_budget),
+            'top100_auc': top_auc(subset_buffer, 100, False, 100, eval_budget),
             'running_time[s]': running_time * (i / eval_budget)
         })
 
@@ -212,9 +204,9 @@ def main():
         'avg_top1': final_top100[0].total if final_top100 else -1,
         'avg_top10': np.mean([item.total for item in final_top100[:10]]) if final_top100 else -1,
         'avg_top100': np.mean([item.total for item in final_top100]) if final_top100 else -1,
-        'top1_auc': top_auc(all_evaluated_items, 1, True, log_freq, eval_budget),
-        'top10_auc': top_auc(all_evaluated_items, 10, True, log_freq, eval_budget),
-        'top100_auc': top_auc(all_evaluated_items, 100, True, log_freq, eval_budget),
+        'top1_auc': top_auc(all_evaluated_items, 1, True, 100, eval_budget),
+        'top10_auc': top_auc(all_evaluated_items, 10, True, 100, eval_budget),
+        'top100_auc': top_auc(all_evaluated_items, 100, True, 100, eval_budget),
         'running_time[s]': running_time
     })
     

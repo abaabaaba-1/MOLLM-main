@@ -5,7 +5,9 @@ description: "Optimizing SACS jacket structure with an expanded set of members (
 save_dir: "./moo_results/"
 save_suffix: "sacs_expanded_3_obj"
 
-resume: False
+resume: True
+early_stopping: False
+
 
 model:
   name: zgca,gemini-2.5-flash-nothinking
@@ -60,5 +62,13 @@ sacs:
 
 optimization:
   pop_size: 40
-  eval_budget: 5000
-  log_freq: 50 
+  eval_budget: 2000
+  log_freq: 40
+
+baseline:
+  mutation_prob: 0.3
+  crossover_prob: 0.7
+
+# [CRITICAL] Disable early stopping to force full 2000 samples
+baseline_early_stopping:
+  enable: False

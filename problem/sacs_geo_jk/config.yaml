@@ -64,6 +64,10 @@ sacs:
   # --- Joints with coupled coordinates ---
   coupled_joints:
     # Format: "master_joint_id": "slave_joint_id"
+    "101": "102"
+    "103": "104"
+    "105": "106"
+    "107": "108"
     "201": "202"
     "203": "204"
     "205": "206"
@@ -79,8 +83,8 @@ sacs:
 
 optimization:
   pop_size: 40
-  eval_budget: 5000
-  log_freq: 100
+  eval_budget: 2000
+  log_freq: 40
   mutation_strategy:
     joint_mutation_amplitudes:
       small: 0.5

@@ -27,13 +27,13 @@ evalutor_path: problem.stellarator_vmec.evaluator
 
 vmec:
 
-  project_path: "/home/wenhao/project/MOLLM-main/problem/stellarator_vmec/vmecpp/examples/data" 
+  project_path: "/home/dataset-assist-0/MOLLM-main/problem/stellarator_vmec/vmecpp/calculations" 
 
   input_file: "input.w7x" 
 
   output_file: "wout_w7x.nc" 
 
 optimization:
-  pop_size: 40
+  pop_size: 100
   eval_budget: 5000
-  log_freq: 50
+  log_freq: 100

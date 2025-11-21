@@ -1,4 +1,3 @@
-# problem/sacs/sacs_file_modifier.py (V2 - 增加对目标文件的支持)
 import re
 import shutil
 from datetime import datetime
@@ -6,21 +5,45 @@ from typing import Dict, List, Optional
 from pathlib import Path
 import logging
 
+
 class SacsFileModifier:
+    """
+    File helper that keeps a stable baseline of sacinp.demo06 so every candidate
+    evaluation starts from an identical geometry.
+    """
+
     def __init__(self, project_path: str):
         self.project_path = Path(project_path)
         self.input_file = self.project_path / "sacinp.demo06"
         self.backup_dir = self.project_path / "backups"
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.backup_dir.mkdir(exist_ok=True)
+
+        self.project_path.mkdir(parents=True, exist_ok=True)
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
+
         if not self.input_file.exists():
             raise FileNotFoundError(f"SACS input file not found: {self.input_file}")
 
+        self.master_backup_path = self._ensure_master_backup()
+
+    def _ensure_master_backup(self) -> Optional[Path]:
+        """
+        Ensure there is a stable master copy of sacinp that can be restored
+        before and after each candidate.
+        """
+        suffix = self.input_file.suffix
+        baseline_name = f"sacinp_master_baseline{suffix}"
+        baseline_path = self.backup_dir / baseline_name
+        if not baseline_path.exists():
+            shutil.copy2(self.input_file, baseline_path)
+            self.logger.info(f"Created master baseline backup: {baseline_name}")
+        return baseline_path
+
     def _create_backup(self) -> Optional[Path]:
-        """Creates a backup of the current input file."""
+        """Creates a backup of the current input file before in-place edits."""
         try:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}.demo06"
+            backup_path = self.backup_dir / f"sacinp_pre_eval_{ts}{self.input_file.suffix}"
             shutil.copy2(self.input_file, backup_path)
             self.logger.info(f"Created backup: {backup_path.name}")
             return backup_path
@@ -29,12 +52,19 @@ class SacsFileModifier:
             return None
 
     def _restore_from_backup(self, backup_path: Path):
-        """Restores the input file from a backup."""
+        """Restores the input file from a temporary backup."""
         try:
             shutil.copy2(backup_path, self.input_file)
             self.logger.warning(f"Restored file from backup: {backup_path.name}")
         except Exception as e:
             self.logger.error(f"Failed to restore from backup {backup_path.name}: {e}")
+
+    def restore_baseline(self):
+        """Restores sacinp.demo06 back to the master baseline snapshot."""
+        if not self.master_backup_path or not self.master_backup_path.exists():
+            raise FileNotFoundError("Master baseline backup missing; cannot restore sacinp.")
+        shutil.copy2(self.master_backup_path, self.input_file)
+        self.logger.debug("Restored sacinp from master baseline.")
 
     def extract_code_blocks(self, block_prefixes: List[str]) -> Dict[str, str]:
         code_blocks = {}
@@ -58,7 +88,7 @@ class SacsFileModifier:
     def replace_code_blocks(self, new_code_blocks: Dict[str, str], target_file: Optional[Path] = None) -> bool:
         """
         Replaces entire lines in a SACS file with new code blocks.
-        
+
         Args:
             new_code_blocks: A dictionary of code blocks to replace.
             target_file (Optional): If provided, modifications are written to this file.
@@ -87,14 +117,17 @@ class SacsFileModifier:
                 if len(parts) != 2:
                     self.logger.warning(f"Invalid identifier format '{identifier}'. Skipping.")
                     continue
-                
+
                 keyword, id_val = parts
                 pattern = re.compile(r"^\s*" + re.escape(keyword) + r"\s+" + re.escape(id_val))
-                
+
                 line_found_and_replaced = False
                 for i, line in enumerate(lines):
                     if pattern.search(line):
-                        self.logger.info(f"Replacing block '{identifier}' in {file_to_modify.name}:\n  OLD: {line.strip()}\n  NEW: {new_line.strip()}")
+                        self.logger.info(
+                            f"Replacing block '{identifier}' in {file_to_modify.name}:\n"
+                            f"  OLD: {line.strip()}\n  NEW: {new_line.strip()}"
+                        )
                         lines[i] = new_line + '\n'
                         lines_replaced += 1
                         line_found_and_replaced = True
@@ -105,6 +138,11 @@ class SacsFileModifier:
 
             with open(file_to_modify, 'w', encoding='utf-8', errors='ignore') as f:
                 f.writelines(lines)
+
+            if lines_replaced == 0 and is_in_place_modification and backup_path:
+                self.logger.warning(f"No code blocks were replaced in {file_to_modify.name}. Rolling back.")
+                self._restore_from_backup(backup_path)
+                return False
 
             if lines_replaced > 0:
                 self.logger.info(f"Successfully replaced {lines_replaced} code blocks in {file_to_modify.name}.")

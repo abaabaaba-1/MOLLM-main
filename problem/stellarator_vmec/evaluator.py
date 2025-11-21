@@ -138,6 +138,14 @@ class RewardingSystem:
         self.output_file_path = Path(self.sacs_project_path) / config.get('vmec.output_file')
         
         self.modifier = VmecFileModifier(self.sacs_project_path, self.input_file)
+        try:
+            extracted = self.modifier.extract_coefficients()
+            if not extracted:
+                raise ValueError("Empty coefficient map extracted from VMEC input.")
+            self.base_coeffs = extracted
+        except Exception as base_e:
+            self.logger.warning(f"Failed to extract baseline coefficients, fallback to hardcoded seed: {base_e}")
+            self.base_coeffs = copy.deepcopy(SEED_BASELINE_COEFFS)
         
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
@@ -169,8 +177,10 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
                 
-                # 1. 修改 input.w7x 文件
-                if not self.modifier.replace_coefficients(new_coefficients):
+                # 1. 修改 input.w7x 文件（在基准系数上叠加增量，防止遗漏键）
+                merged_coeffs = copy.deepcopy(self.base_coeffs)
+                merged_coeffs.update(new_coefficients)
+                if not self.modifier.replace_coefficients(merged_coeffs):
                     self._assign_penalty(item, "VMEC file modification failed")
                     invalid_num += 1
                     continue

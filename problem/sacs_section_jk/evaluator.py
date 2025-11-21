@@ -249,11 +249,35 @@ class RewardingSystem:
         self.runner = SacsRunner(project_path=self.sacs_project_path, sacs_install_path=config.get('sacs.install_path'))
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
+        self.baseline_weight_tonnes = None
+        self.weight_ratio_bounds = config.get('sacs.weight_ratio_bounds', [0.5, 2.0])
+        if not (isinstance(self.weight_ratio_bounds, (list, tuple)) and len(self.weight_ratio_bounds) == 2):
+            self.weight_ratio_bounds = [0.5, 2.0]
+        self.weight_bounds = config.get('sacs.weight_bounds', [40.0, 250.0])
+        if not (isinstance(self.weight_bounds, (list, tuple)) and len(self.weight_bounds) == 2):
+            self.weight_bounds = [40.0, 250.0]
+
+        try:
+            base_weight_res = calculate_sacs_weight_from_db(self.sacs_project_path)
+            if base_weight_res.get('status') == 'success':
+                self.baseline_weight_tonnes = max(1e-6, float(base_weight_res['total_weight_tonnes']))
+                self.logger.info(f"Baseline weight for normalization: {self.baseline_weight_tonnes:.3f} tonnes")
+        except Exception as exc:
+            self.logger.warning(f"Failed to read baseline weight for normalization: {exc}")
 
     def evaluate(self, items):
         invalid_num = 0
         for item in items:
+            wrote_candidate = False
             try:
+                try:
+                    self.modifier.restore_baseline()
+                except Exception as baseline_err:
+                    self.logger.error(f"Failed to restore baseline before evaluation: {baseline_err}")
+                    self._assign_penalty(item, "Baseline_Restore_Fail")
+                    invalid_num += 1
+                    continue
+
                 raw_value = item.value
                 try:
                     if 'candidate' in raw_value:
@@ -274,8 +298,13 @@ class RewardingSystem:
                 if not self.modifier.replace_code_blocks(new_code_blocks):
                     self._assign_penalty(item, "SACS file modification failed")
                     invalid_num += 1
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after modification failure: {cleanup_err}")
                     continue
 
+                wrote_candidate = True
                 analysis_result = self.runner.run_analysis(timeout=300)
                 
                 if not analysis_result.get('success'):
@@ -320,6 +349,12 @@ class RewardingSystem:
                 self.logger.critical(f"Unhandled exception during item evaluation: {e}", exc_info=True)
                 self._assign_penalty(item, f"Critical_Eval_Error: {e}")
                 invalid_num += 1
+            finally:
+                if wrote_candidate:
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after evaluation: {cleanup_err}")
 
         return items, { "invalid_num": invalid_num, "repeated_num": 0 }
 
@@ -352,15 +387,26 @@ class RewardingSystem:
         """
         transformed = {}
         
-        # --- 1. Weight Transformation (Correct) ---
-        w_min, w_max = 50, 5000   
-        w = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
-        if self.obj_directions.get('weight') == 'min':
-            # This correctly maps low weight to a low score [0, 1]
-            transformed['weight'] = (w - w_min) / (w_max - w_min)
+        # --- 1. Weight Transformation (dynamic when baseline available) ---
+        if self.baseline_weight_tonnes:
+            min_ratio, max_ratio = self.weight_ratio_bounds
+            weight = penalized_results.get('weight', self.baseline_weight_tonnes)
+            ratio = weight / self.baseline_weight_tonnes
+            ratio = np.clip(ratio, min_ratio, max_ratio)
+            denom = max(max_ratio - min_ratio, 1e-8)
+            weight_norm = (ratio - min_ratio) / denom
         else:
-            # This correctly maps high weight to a low score [0, 1]
-            transformed['weight'] = (w_max - w) / (w_max - w_min)
+            w_min, w_max = self.weight_bounds
+            w_min, w_max = float(w_min), float(w_max)
+            if w_min >= w_max:
+                w_min, w_max = 40.0, 250.0
+            weight = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
+            weight_norm = (weight - w_min) / (w_max - w_min)
+
+        if self.obj_directions.get('weight') == 'min':
+            transformed['weight'] = weight_norm
+        else:
+            transformed['weight'] = 1.0 - weight_norm
 
         # --- 2. Stress (UC) Transformations (Normalized to [0, 1] for fair comparison) ---
         # Normalize UC values to [0, 1] to match geometric optimization and enable fair hypervolume comparison

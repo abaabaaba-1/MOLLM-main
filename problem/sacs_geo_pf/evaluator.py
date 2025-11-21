@@ -258,13 +258,23 @@ class RewardingSystem:
         self.runner = SacsRunner(project_path=self.sacs_project_path, sacs_install_path=config.get('sacs.install_path'))
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
+        self.coupled_joints = config.get('sacs.coupled_joints', {}) or {}
 
     def evaluate(self, items):
         invalid_num = 0
         if not items: return [], {"invalid_num": 0, "repeated_num": 0}
 
         for item in items:
+            wrote_candidate = False
             try:
+                try:
+                    self.modifier.restore_baseline()
+                except Exception as baseline_err:
+                    self.logger.error(f"Failed to restore baseline before evaluation: {baseline_err}")
+                    self._assign_penalty(item, "Baseline_Restore_Fail")
+                    invalid_num += 1
+                    continue
+
                 raw_value = item.value
                 try:
                     json_match = re.search(r'{\s*"new_code_blocks":\s*{.*?}\s*}', raw_value, re.DOTALL)
@@ -297,11 +307,18 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
 
+                filtered_blocks = self._apply_coupled_joint_constraints(filtered_blocks)
+
                 if not self.modifier.replace_code_blocks(filtered_blocks):
                     self._assign_penalty(item, "SACS file modification failed")
                     invalid_num += 1
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after modification failure: {cleanup_err}")
                     continue
 
+                wrote_candidate = True
                 analysis_result = self.runner.run_analysis(timeout=300)
                 if not analysis_result.get('success'):
                     error_msg = analysis_result.get('error', 'Unknown SACS execution error')
@@ -332,6 +349,12 @@ class RewardingSystem:
                 self.logger.critical(f"Unhandled exception during evaluation: {e}", exc_info=True)
                 self._assign_penalty(item, f"Critical_Eval_Error: {e}")
                 invalid_num += 1
+            finally:
+                if wrote_candidate:
+                    try:
+                        self.modifier.restore_baseline()
+                    except Exception as cleanup_err:
+                        self.logger.error(f"Failed to restore baseline after evaluation: {cleanup_err}")
         return items, {"invalid_num": invalid_num, "repeated_num": 0}
 
     def _apply_penalty(self, results: dict, max_uc: float) -> dict:
@@ -375,3 +398,70 @@ class RewardingSystem:
             transformed[key] = np.clip(val, 0.0, 1.0)
 
         return transformed
+
+    def _apply_coupled_joint_constraints(self, candidate_blocks: dict) -> dict:
+        """
+        Ensures declared coupled joints stay coincident by rebuilding slave joint lines
+        using their master's coordinates.
+        """
+        if not candidate_blocks or not self.coupled_joints:
+            return candidate_blocks
+
+        enforced_blocks = dict(candidate_blocks)
+        required_joint_keys = {
+            f"JOINT_{joint_id}"
+            for ids in self.coupled_joints.items()
+            for joint_id in ids
+        }
+        missing_keys = [k for k in required_joint_keys if k not in enforced_blocks]
+        baseline_lines = self._load_joint_lines_from_file(missing_keys)
+
+        for master_id, slave_id in self.coupled_joints.items():
+            master_key = f"JOINT_{master_id}"
+            slave_key = f"JOINT_{slave_id}"
+
+            master_line = enforced_blocks.get(master_key) or baseline_lines.get(master_key)
+            slave_line = enforced_blocks.get(slave_key) or baseline_lines.get(slave_key)
+
+            if not master_line:
+                self.logger.warning(f"Missing master joint {master_key}; cannot enforce coupling.")
+                if slave_line:
+                    enforced_blocks[slave_key] = slave_line
+                continue
+
+            master_coords = _get_coords_from_modified_line(master_line)
+            if not master_coords:
+                self.logger.warning(f"Failed to parse coordinates for {master_key}; skipping coupling.")
+                continue
+
+            base_slave_line = slave_line or master_line
+            new_slave_line = _build_slave_joint_line(base_slave_line, master_coords)
+            enforced_blocks[slave_key] = new_slave_line
+
+        return enforced_blocks
+
+    def _load_joint_lines_from_file(self, joint_keys) -> dict:
+        """Loads JOINT lines from the current sacinp file for keys missing in the candidate."""
+        if not joint_keys:
+            return {}
+
+        input_path = getattr(self.modifier, "input_file", Path(self.sacs_project_path) / "sacinp.demo13")
+        try:
+            with open(input_path, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+        except FileNotFoundError:
+            self.logger.error(f"Cannot open SACS input file {input_path}; coupled joints may desync.")
+            return {}
+
+        joint_line_map = {}
+        for joint_key in joint_keys:
+            parts = joint_key.split('_')
+            if len(parts) != 2:
+                continue
+            joint_id = parts[1]
+            pattern = re.compile(r"^\s*JOINT\s+" + re.escape(joint_id))
+            for line in all_lines:
+                if pattern.search(line):
+                    joint_line_map[joint_key] = line.rstrip('\n')
+                    break
+        return joint_line_map

@@ -71,6 +71,7 @@ class MOO:
         self.record_dict['main_history_smiles'] = []
         self.record_dict['au_history_smiles'] = []
         self.time_step = 0
+        self.num_gen = 0  # Initialize generation counter
         self.start_time = time.time()
         self.num_offspring = self.config.get('optimization.num_offspring',default=2)
 
@@ -446,22 +447,26 @@ class MOO:
         if parallel:
             with concurrent.futures.ProcessPoolExecutor() as executor:
                 futures = [executor.submit(self.mating, parent_list=parent_list) for parent_list in parents]
-                #results = [future.result() for future in futures]
-                #children, prompts, responses = zip(*results) #[[item,item],[item,item]] # ['who are you value 1', 'who are you value 2'] # ['yes, 'no']
-                #self.llm_calls += len(results)     
                 results = []
                 for future in futures:
                     try:
-                        result = future.result(timeout=900)  # 最多等待 120 秒
+                        # Give each LLM call enough time, but don't deadlock forever
+                        result = future.result(timeout=900)
                         results.append(result)
                     except concurrent.futures.TimeoutError:
-                        print("Warning: A task timed out after 180 seconds.")
-                        continue  # 或者 results.append(default_value)
+                        print("Warning: A task timed out after 900 seconds; skipping this offspring batch.")
+                    except Exception as e:
+                        # Catch worker-side errors (e.g., LLM HTTP failures) so the main loop keeps running
+                        print(f"Warning: Offspring task failed with error: {e}; skipping this batch.")
+                        continue
+
                 if results:
                     children, prompts, responses = zip(*results)
                     self.llm_calls += len(results)
                 else:
-                    print("No results collected due to timeouts.")
+                    # If all workers failed or timed out, log and continue to next generation gracefully
+                    print("No offspring generated this round (all workers failed or timed out). Continuing...")
+                    return []
         else:
             children,prompts,responses = [],[],[]
             for parent_list in tqdm(parents):
@@ -550,7 +555,8 @@ class MOO:
     def select_next_population(self,pop_size):
         whole_population = [i[0] for i in self.mol_buffer]
         if len(self.property_list)>1:
-            return nsga2_so_selection(whole_population, pop_size)
+            # Fixed: Use proper NSGA-II selection instead of hybrid nsga2_so_selection
+            return nsga2_selection(whole_population, pop_size)
         else:
             return so_selection(whole_population,pop_size)
 

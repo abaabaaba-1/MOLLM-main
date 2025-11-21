@@ -448,7 +448,8 @@ class MOO:
     def select_next_population(self,pop_size):
         if not self.mol_buffer: return []
         whole_population = [i[0] for i in self.mol_buffer]
-        return nsga2_so_selection(whole_population, pop_size) if len(self.property_list)>1 else so_selection(whole_population,pop_size)
+        # Fixed: Use proper NSGA-II selection
+        return nsga2_selection(whole_population, pop_size) if len(self.property_list)>1 else so_selection(whole_population,pop_size)
 
     def load_ckpt(self,store_path):
         print('Resuming training...')

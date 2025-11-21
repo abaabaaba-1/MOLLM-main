@@ -1,0 +1,572 @@
+ DEMO 01 ENGLISH UNITS MODEL                                                                                            
+OPTIONS      EN       SDUC   2 1   DC  C  PTPTPTPTPTPTPTPTPT                                                            
+LCSEL           CMB1 CMB2                                                                                               
+SECT                                                                                                                    
+SECT CONE      CON                               36.0000.75026.000                                                      
+GRUP                                                                                                                    
+GRUP DUM         12.000 1.000 29.0011.6036.00 9    1.001.00     0.500N490.00                                            
+GRUP LG6         36.000 0.750 29.0011.0036.00 1    1.001.00     0.500N490.003.25                                        
+GRUP LG6 CONE                 29.0011.6036.00 1    1.001.00     0.500N490.004.95                                        
+GRUP LG6         26.000 0.750 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP LG7         26.000 0.750 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP SHF          4.000 1.000 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP SK2 W8X24                29.0011.6036.00 1    1.001.00     0.500N1.00-2                                            
+GRUP SKD W12X30               29.0011.6036.00 1    1.001.00     0.500N1.00-2                                            
+GRUP STB          6.000 1.000 29.0011.6036.00 9    1.001.00     0.500N1.00-2                                            
+GRUP VB1         12.750 0.625 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP VB2          8.825 0.500 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP VBS         12.750 0.625 29.0011.6036.00 1    1.001.00     0.500N490.00                                            
+GRUP W01 W24X162              29.0111.2035.97 1    1.001.00     0.500 490.00                                            
+GRUP W02 W24X131              29.0111.2035.97 1    1.001.00     0.500 490.00                                            
+MEMBER                                                                                                                  
+MEMBER1937 1000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1938 1000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1939 3000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1940 3000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1941 1000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1942 1000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1943 3000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1944 3000 DUM   000111000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER 601 701  LG6                                                                                                     
+MEMBER 603 703  LG6                                                                                                     
+MEMBER 605 705  LG6                                                                                                     
+MEMBER 607 707  LG6                                                                                                     
+MEMBER 701 801  LG7                                                                                                     
+MEMBER 703 803  LG7                                                                                                     
+MEMBER 705 805  LG7                                                                                                     
+MEMBER 707 807  LG7                                                                                                     
+MEMBER110002000 SHF                                                                                                     
+MEMBER OFFSETS                                 -12.00                                                                   
+MEMBER 30002000 SHF   000000100011                                                                                      
+MEMBER1937 941  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1938 942  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1941 943  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1941 950  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1942 941  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1942 944  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1943 940  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1943 952  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1944 939  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1944 943  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1949 942  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER1951 944  SK2                                                                                                     
+MEMBER OFFSETS                                  2.000             2.000                                                 
+MEMBER 903 938  SKD                                                                                                     
+MEMBER 903 949  SKD                                                                                                     
+MEMBER 936 939  SKD                                                                                                     
+MEMBER 937 945  SKD                                                                                                     
+MEMBER 938 947  SKD                                                                                                     
+MEMBER 939 948  SKD                                                                                                     
+MEMBER 940 946  SKD                                                                                                     
+MEMBER 945 950  SKD                                                                                                     
+MEMBER 947 937  SKD                                                                                                     
+MEMBER 948 940  SKD                                                                                                     
+MEMBER 949 951  SKD                                                                                                     
+MEMBER 950 952  SKD                                                                                                     
+MEMBER 951 936  SKD                                                                                                     
+MEMBER 952 946  SKD                                                                                                     
+MEMBER1803 903  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1836 936  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1845 945  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1846 946  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1847 947  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1848 948  STB   000011000000                                                                                      
+MEMBER OFFSETS                                 12.000                                                                   
+MEMBER1840 VB02 VB1                                                                                                     
+MEMBER OFFSETS                      1.680 6.380                                                                         
+MEMBER1841 VB04 VB1                                                                                                     
+MEMBER OFFSETS                     -1.670 6.380                                                                         
+MEMBER VB02VB03 VB1                                                                                                     
+MEMBER1VB03VB01 VB1                                                                                                     
+MEMBER OFFSETS                                       -3.290-12.51                                                       
+MEMBER VB04VB05 VB1                                                                                                     
+MEMBER1VB05VB01 VB1                                                                                                     
+MEMBER OFFSETS                                        3.300-12.51                                                       
+MEMBER1VB06VB07 VB1                                                                                                     
+MEMBER OFFSETS                            6.380 2.660                                                                   
+MEMBER VB07VB08 VB1                                                                                                     
+MEMBER VB08VB01 VB1                                                                                                     
+MEMBER1705 724  VB2                                                                                                     
+MEMBER OFFSETS                                       -3.890-5.040                                                       
+MEMBER1717 724  VB2                                                                                                     
+MEMBER OFFSETS                                        3.900-5.040                                                       
+MEMBER1805 841  VB2                                                                                                     
+MEMBER OFFSETS                                       -3.230-12.74                                                       
+MEMBER1VB02841  VB2                                                                                                     
+MEMBER OFFSETS                      3.740-10.84      -10.4614.700                                                       
+MEMBER1VB02VB04 VB2                                                                                                     
+MEMBER OFFSETS                      6.600            -6.590                                                             
+MEMBER1VB02VB05 VB2                                                                                                     
+MEMBER OFFSETS                     10.86016.190      -3.940-10.03                                                       
+MEMBER1VB03VB05 VB2                                                                                                     
+MEMBER OFFSETS                      6.640 0.180      -6.980 1.480                                                       
+MEMBER1VB06840  VB2                                                                                                     
+MEMBER OFFSETS                     -6.370      10.090 4.030      -6.370                                                 
+MEMBER1VB06841  VB2                                                                                                     
+MEMBER OFFSETS                      6.380      10.090-3.430      -5.440                                                 
+MEMBER1VB07VB02 VB2                                                                                                     
+MEMBER OFFSETS                     -3.600       5.700 3.440      -5.440                                                 
+MEMBER1VB07VB04 VB2                                                                                                     
+MEMBER OFFSETS                      3.610       5.700-3.430      -5.440                                                 
+MEMBER1VB08VB03 VB2                                                                                                     
+MEMBER OFFSETS                     -3.600       5.700 3.440      -5.440                                                 
+MEMBER1VB08VB05 VB2                                                                                                     
+MEMBER OFFSETS                      3.610       5.700-3.430      -5.440                                                 
+MEMBER 724 VB06 VBS                                                                                                     
+MEMBER1VB06849  VBS                                                                                                     
+MEMBER OFFSETS                                                   -6.370                                                 
+MEMBER 701 714  W01                                                                                                     
+MEMBER 705 717  W01                                                                                                     
+MEMBER 714 715  W01                                                                                                     
+MEMBER 715 703  W01                                                                                                     
+MEMBER 717 718  W01                                                                                                     
+MEMBER 718 707  W01                                                                                                     
+MEMBER 801 834  W01                                                                                                     
+MEMBER 803 836  W01                                                                                                     
+MEMBER 805 837  W01                                                                                                     
+MEMBER 807 839  W01                                                                                                     
+MEMBER 834 835  W01                                                                                                     
+MEMBER 835 803  W01                                                                                                     
+MEMBER 837 838  W01                                                                                                     
+MEMBER 838 807  W01                                                                                                     
+MEMBER 701 705  W02                                                                                                     
+MEMBER 703 707  W02                                                                                                     
+MEMBER 705 720  W02                                                                                                     
+MEMBER 707 723  W02                                                                                                     
+MEMBER 709 701  W02                                                                                                     
+MEMBER 710 714  W02                                                                                                     
+MEMBER 711 715  W02                                                                                                     
+MEMBER 712 703  W02                                                                                                     
+MEMBER 714 717  W02                                                                                                     
+MEMBER 715 718  W02                                                                                                     
+MEMBER 717 721  W02                                                                                                     
+MEMBER 718 722  W02                                                                                                     
+MEMBER 720 724  W02                                                                                                     
+MEMBER 724 721  W02                                                                                                     
+MEMBER 801 805  W02                                                                                                     
+MEMBER 803 847  W02                                                                                                     
+MEMBER 805 840  W02                                                                                                     
+MEMBER 807 843  W02                                                                                                     
+MEMBER 829 801  W02                                                                                                     
+MEMBER 830 834  W02                                                                                                     
+MEMBER 831 835  W02                                                                                                     
+MEMBER 832 803  W02                                                                                                     
+MEMBER 833 836  W02                                                                                                     
+MEMBER 834 837  W02                                                                                                     
+MEMBER 835 838  W02                                                                                                     
+MEMBER 836 848  W02                                                                                                     
+MEMBER 837 841  W02                                                                                                     
+MEMBER 838 842  W02                                                                                                     
+MEMBER 839 844  W02                                                                                                     
+MEMBER 840 849  W02                                                                                                     
+MEMBER 845 807  W02                                                                                                     
+MEMBER 846 839  W02                                                                                                     
+MEMBER 847 845  W02                                                                                                     
+MEMBER 848 846  W02                                                                                                     
+MEMBER1849 841  W02                                                                                                     
+MEMBER OFFSETS                                       -6.590                                                             
+PGRUP                                                                                                                   
+PGRUP P01 0.3750I29.000 0.25036.000                                     490.0000                                        
+PGRUP PLT 0.2500 29.000 0.25036.000                                     490.0000                                        
+PLATE                                                                                                                   
+PLATE AAAC 801 834 805 837 P01            0                                                                             
+PLATE AAAD 834 835 837 838 P01            0                                                                             
+PLATE SK01 903 949 942 938 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK02 949 951 944 942 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK03 951 936 939 944 PLT            0                                                                             
+PLATE SK04 942 944 943 941 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK05 943 940 946 952 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK06 944 939 940 943 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK07 938 942 941 937 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK08 937 941 950 945 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE SK09 941 943 952 950 PLT            1                                                                             
+PLATE  OFFSETS                                 12.000            12.000                                                 
+PLATE  OFFSETS                                 12.000            12.000                                                 
+JOINT                                                                                                                   
+JOINT  601  -24.00 -16.00  13.00                      PINNED                                                            
+JOINT  603   24.00 -16.00  13.00                      PINNED                                                            
+JOINT  605  -24.00  16.00  13.00                      PINNED                                                            
+JOINT  607   24.00  16.00  13.00                      PINNED                                                            
+JOINT  701  -24.00 -16.00  50.00                      222000                                                            
+JOINT  703   24.00 -16.00  50.00                      222000                                                            
+JOINT  705  -24.00  16.00  50.00                      222000                                                            
+JOINT  707   24.00  16.00  50.00                      222000                                                            
+JOINT  709  -24.00 -26.00  50.00        -2.964                                                                          
+JOINT  710   -8.00 -26.00  50.00 -2.424 -2.964                                                                          
+JOINT  711    8.00 -26.00  50.00  2.424 -2.964                                                                          
+JOINT  712   24.00 -26.00  50.00        -2.964                                                                          
+JOINT  714   -8.00 -16.00  50.00 -2.424               222000                                                            
+JOINT  715    8.00 -16.00  50.00  2.424               222000                                                            
+JOINT  717   -8.00  16.00  50.00 -2.424               222000                                                            
+JOINT  718    8.00  16.00  50.00  2.424               222000                                                            
+JOINT  720  -24.00  26.00  50.00         2.964                                                                          
+JOINT  721   -8.00  26.00  50.00 -2.424  2.964                                                                          
+JOINT  722    8.00  26.00  50.00  2.424  2.964                                                                          
+JOINT  723   24.00  26.00  50.00         2.964                                                                          
+JOINT  724  -16.00  26.00  50.00 -1.212  2.964                                                                          
+JOINT  801  -24.00 -16.00  75.00                      222000                                                            
+JOINT  803   24.00 -16.00  75.00                      222000                                                            
+JOINT  805  -24.00  16.00  75.00                      222000                                                            
+JOINT  807   24.00  16.00  75.00                      222000                                                            
+JOINT  829  -24.00 -26.00  75.00        -2.964                                                                          
+JOINT  830   -8.00 -26.00  75.00 -2.424 -2.964                                                                          
+JOINT  831    8.00 -26.00  75.00  2.424 -2.964                                                                          
+JOINT  832   24.00 -26.00  75.00        -2.964                                                                          
+JOINT  833   41.00 -26.00  75.00  0.132 -2.964                                                                          
+JOINT  834   -8.00 -16.00  75.00 -2.424               222000                                                            
+JOINT  835    8.00 -16.00  75.00  2.424               222000                                                            
+JOINT  836   41.00 -16.00  75.00  0.132               222000                                                            
+JOINT  837   -8.00  16.00  75.00 -2.424               222000                                                            
+JOINT  838    8.00  16.00  75.00  2.424               222000                                                            
+JOINT  839   41.00  16.00  75.00  0.132               222000                                                            
+JOINT  840  -24.00  26.00  75.00         2.964        222000                                                            
+JOINT  841   -8.00  26.00  75.00 -2.424  2.964        222000                                                            
+JOINT  842    8.00  26.00  75.00  2.424  2.964                                                                          
+JOINT  843   24.00  26.00  75.00         2.964                                                                          
+JOINT  844   41.00  26.00  75.00  0.132  2.964                                                                          
+JOINT  845   24.00  -6.00  75.00                      222000                                                            
+JOINT  846   41.00  -6.00  75.00  0.132               222000                                                            
+JOINT  847   24.00 -11.00  75.00                      222000                                                            
+JOINT  848   41.00 -11.00  75.00  0.132               222000                                                            
+JOINT  849  -16.00  26.00  75.00 -1.212  2.964                                                                          
+JOINT  903   24.00 -16.00  77.00                      222000                                                            
+JOINT  936   41.00 -16.00  77.00  0.132               222000                                                            
+JOINT  937   24.00  -8.00  77.00        -6.000        222000                                                            
+JOINT  938   24.00 -13.00  77.00        -6.000        222000                                                            
+JOINT  939   41.00 -13.00  77.00  0.132 -6.000        222000                                                            
+JOINT  940   41.00  -8.00  77.00  0.132 -6.000        222000                                                            
+JOINT  941   29.00  -8.00  77.00        -6.000        222000                                                            
+JOINT  942   29.00 -13.00  77.00        -6.000        222000                                                            
+JOINT  943   36.00  -8.00  77.00  0.132 -6.000        222000                                                            
+JOINT  944   36.00 -13.00  77.00  0.132 -6.000        222000                                                            
+JOINT  945   24.00  -6.00  77.00                      222000                                                            
+JOINT  946   41.00  -6.00  77.00  0.132               222000                                                            
+JOINT  947   24.00 -11.00  77.00                      222000                                                            
+JOINT  948   41.00 -11.00  77.00  0.132                                                                                 
+JOINT  949   29.00 -16.00  77.00                      222000                                                            
+JOINT  950   29.00  -6.00  77.00                      222000                                                            
+JOINT  951   36.00 -16.00  77.00  0.132               222000                                                            
+JOINT  952   36.00  -6.00  77.00  0.132               222000                                                            
+JOINT 1000   26.00 -11.00  81.00  6.000               222222                                                            
+JOINT 2000   32.00 -11.00  80.00  6.060               222000                                                            
+JOINT 3000   38.00 -11.00  80.00  6.132               222222                                                            
+JOINT VB01  -16.00  56.00  75.00 -1.212  2.964        222000                                                            
+JOINT VB02  -21.00  36.00  75.00 -4.404  2.964        222000                                                            
+JOINT VB03  -18.00  46.00  75.00 -8.808  2.964        222000                                                            
+JOINT VB04  -10.00  36.00  75.00-10.020  2.964        222000                                                            
+JOINT VB05  -13.00  46.00  75.00 -5.616  2.964        222000                                                            
+JOINT VB06  -16.00  26.00  62.00 -1.212  2.964  6.000 222000                                                            
+JOINT VB07  -16.00  36.00  66.00 -1.212  2.964  8.004 222000                                                            
+JOINT VB08  -16.00  46.00  70.00 -1.212  2.964  9.996 222000                                                            
+LOAD                                                                                                                    
+LOADCNAREA                                                                                                              
+***LDS1**     24.000   -26.247    50.000    24.000    26.247    50.000   -24.000                                        
+***LDS2**    -26.247    50.000   -24.000    26.247    50.000   -10.000                                                  
+***LDS3**              0   1   3   0   0AREA  -2EQUPPRES10PSFL                                                          
+LOAD Z 701 705         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 703 707         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 705 720         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 707 723         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 709 701         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 710 714         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+LOAD Z 711 715         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+LOAD Z 712 703         -0.0790       -0.0790                GLOB UNIF   10PSFL                                          
+LOAD Z 714 717         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+LOAD Z 715 718         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+LOAD Z 717 721         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+LOAD Z 718 722         -0.1610       -0.1610                GLOB UNIF   10PSFL                                          
+***LDS1**     41.011   -26.247    75.000    41.011    26.247    75.000   -24.000                                        
+***LDS2**    -26.247    75.000   -24.000    26.247    75.000   -15.000                                                  
+***LDS3**              0   1   3   0   0AREA  -2EQUPPRES15PSFU                                                          
+LOAD Z 801 805         -0.1180       -0.1180                GLOB UNIF   15PSFU                                          
+LOAD Z 803 847         -0.2460       -0.2460                GLOB UNIF   15PSFU                                          
+LOAD Z 805 840         -0.1180       -0.1180                GLOB UNIF   15PSFU                                          
+LOAD Z 807 843         -0.2460       -0.2460                GLOB UNIF   15PSFU                                          
+LOAD Z 829 801         -0.1180       -0.1180                GLOB UNIF   15PSFU                                          
+LOAD Z 830 834         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 831 835         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 832 803         -0.2460       -0.2460                GLOB UNIF   15PSFU                                          
+LOAD Z 833 836         -0.1280       -0.1280                GLOB UNIF   15PSFU                                          
+LOAD Z 834 837         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 835 838         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 836 848         -0.1280       -0.1280                GLOB UNIF   15PSFU                                          
+LOAD Z 837 841         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 838 842         -0.2420       -0.2420                GLOB UNIF   15PSFU                                          
+LOAD Z 839 844         -0.1280       -0.1280                GLOB UNIF   15PSFU                                          
+LOAD Z 845 807         -0.2460       -0.2460                GLOB UNIF   15PSFU                                          
+LOAD Z 846 839         -0.1280       -0.1280                GLOB UNIF   15PSFU                                          
+LOAD Z 847 845         -0.2460       -0.2460                GLOB UNIF   15PSFU                                          
+LOAD Z 848 846         -0.1280       -0.1280                GLOB UNIF   15PSFU                                          
+LOADCNDEAD                                                                                                              
+LOAD Z 937 1000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 938 1000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 939 3000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 940 3000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 941 1000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 942 1000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 943 3000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 944 3000        -0.1180       -0.1180                GLOB UNIF   SELF_WT                                         
+LOAD Z 601 701         -0.28303.25000-0.2830                GLOB UNIF   SELF_WT                                         
+LOAD Z 601 701  3.25000-0.28304.95000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 601 701  8.20000-0.202028.8000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 603 703         -0.28303.25000-0.2830                GLOB UNIF   SELF_WT                                         
+LOAD Z 603 703  3.25000-0.28304.95000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 603 703  8.20000-0.202028.8000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 605 705         -0.28303.25000-0.2830                GLOB UNIF   SELF_WT                                         
+LOAD Z 605 705  3.25000-0.28304.95000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 605 705  8.20000-0.202028.8000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 607 707         -0.28303.25000-0.2830                GLOB UNIF   SELF_WT                                         
+LOAD Z 607 707  3.25000-0.28304.95000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 607 707  8.20000-0.202028.8000-0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 701 801         -0.2020       -0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 703 803         -0.2020       -0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 705 805         -0.2020       -0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 707 807         -0.2020       -0.2020                GLOB UNIF   SELF_WT                                         
+LOAD Z 10002000        -0.0320       -0.0320                GLOB UNIF   SELF_WT                                         
+LOAD Z 30002000        -0.0320       -0.0320                GLOB UNIF   SELF_WT                                         
+LOAD Z 840 VB02        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z 841 VB04        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB02VB03        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB03VB01        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB04VB05        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB05VB01        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB06VB07        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB07VB08        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB08VB01        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z 705 724         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z 717 724         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z 805 841         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB02841         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB02VB04        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB02VB05        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB03VB05        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB06840         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB06841         -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB07VB02        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB07VB04        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB08VB03        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z VB08VB05        -0.0440       -0.0440                GLOB UNIF   SELF_WT                                         
+LOAD Z 724 VB06        -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z VB06849         -0.0810       -0.0810                GLOB UNIF   SELF_WT                                         
+LOAD Z 701 714         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 705 717         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 714 715         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 715 703         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 717 718         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 718 707         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 801 834         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 803 836         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 805 837         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 807 839         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 834 835         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 835 803         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 837 838         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 838 807         -0.1620       -0.1620                GLOB UNIF   SELF_WT                                         
+LOAD Z 701 705         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 703 707         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 705 720         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 707 723         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 709 701         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 710 714         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 711 715         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 712 703         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 714 717         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 715 718         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 717 721         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 718 722         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 720 724         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 724 721         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 801 805         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 803 847         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 805 840         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 807 843         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 829 801         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 830 834         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 831 835         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 832 803         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 833 836         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 834 837         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 835 838         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 836 848         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 837 841         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 838 842         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 839 844         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 840 849         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 845 807         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 846 839         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 847 845         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 848 846         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD Z 849 841         -0.1310       -0.1310                GLOB UNIF   SELF_WT                                         
+LOAD   801                    -1.9353                       GLOB JOIN   SELF_WT                                         
+LOAD   805                    -1.9353                       GLOB JOIN   SELF_WT                                         
+LOAD   834                    -3.9447                       GLOB JOIN   SELF_WT                                         
+LOAD   835                    -2.0095                       GLOB JOIN   SELF_WT                                         
+LOAD   837                    -3.9447                       GLOB JOIN   SELF_WT                                         
+LOAD   838                    -2.0095                       GLOB JOIN   SELF_WT                                         
+LOAD   903                    -0.0319                       GLOB JOIN   SELF_WT                                         
+LOAD   936                    -0.0319                       GLOB JOIN   SELF_WT                                         
+LOAD   937                    -0.0957                       GLOB JOIN   SELF_WT                                         
+LOAD   938                    -0.0957                       GLOB JOIN   SELF_WT                                         
+LOAD   939                    -0.0957                       GLOB JOIN   SELF_WT                                         
+LOAD   940                    -0.0957                       GLOB JOIN   SELF_WT                                         
+LOAD   941                    -0.2299                       GLOB JOIN   SELF_WT                                         
+LOAD   942                    -0.2299                       GLOB JOIN   SELF_WT                                         
+LOAD   943                    -0.2299                       GLOB JOIN   SELF_WT                                         
+LOAD   944                    -0.2299                       GLOB JOIN   SELF_WT                                         
+LOAD   945                    -0.0319                       GLOB JOIN   SELF_WT                                         
+LOAD   946                    -0.0319                       GLOB JOIN   SELF_WT                                         
+LOAD   949                    -0.0766                       GLOB JOIN   SELF_WT                                         
+LOAD   950                    -0.0766                       GLOB JOIN   SELF_WT                                         
+LOAD   951                    -0.0766                       GLOB JOIN   SELF_WT                                         
+LOAD   952                    -0.0766                       GLOB JOIN   SELF_WT                                         
+LOADCNEQPT                                                                                                              
+***LDS1**     16.000     6.000    75.000    16.000     6.000    75.000                                                  
+***LDS2**             -250.000                                  20.000    10.000                                        
+***LDS3**     10.000   1   2   2   0   0EQPT  -1EQUPSKIDSKID1   X                                                       
+LOAD Z 835 838  17.4040-65.579                              GLOB CONC   SKID1                                           
+LOAD Z 835 838  27.4040-65.579                              GLOB CONC   SKID1                                           
+LOAD Z 845 807  7.40400-59.421                              GLOB CONC   SKID1                                           
+LOAD Z 845 807  17.4040-59.421                              GLOB CONC   SKID1                                           
+***LDS1**    -16.000   -16.000    75.000   -16.000   -16.000    75.000                                                  
+***LDS2**             -150.000                                  20.000     7.500                                        
+***LDS3**      7.500   1   2   2   0   0EQPT  -1EQUPSKIDSKID2   X                                                       
+LOAD Z 829 801  6.49700-35.653                              GLOB CONC   SKID2                                           
+LOAD Z 830 834  6.49700-39.347                              GLOB CONC   SKID2                                           
+LOAD Z 834 837  4.15400-39.347                              GLOB CONC   SKID2                                           
+LOAD Z 801 805  4.15400-35.653                              GLOB CONC   SKID2                                           
+***LDS1**    -16.000              50.000   -16.000              50.000                                                  
+***LDS2**             -100.000                                  20.000     7.500                                        
+***LDS3**      7.500   1   2   2   0   0EQPT  -1EQUPSKIDSKID3   X                                                       
+LOAD Z 701 705  12.6540-23.769                              GLOB CONC   SKID3                                           
+LOAD Z 701 705  20.1540-23.769                              GLOB CONC   SKID3                                           
+LOAD Z 714 717  12.6540-26.231                              GLOB CONC   SKID3                                           
+LOAD Z 714 717  20.1540-26.231                              GLOB CONC   SKID3                                           
+***LDS1**     32.000    19.000    75.000    32.000    19.000    75.000                                                  
+***LDS2**              -35.000                                  20.000     7.000                                        
+***LDS3**      7.000   1   2   3   0   0EQPT  -1EQUPSKIDSKID4   X                                                       
+LOAD Z 845 807  21.5000-6.1800                              GLOB CONC   SKID4                                           
+LOAD Z 807 843  3.00000-6.1800                              GLOB CONC   SKID4                                           
+LOAD Z 807 843  6.50000-6.1800                              GLOB CONC   SKID4                                           
+LOAD Z 846 839  21.5000-5.4866                              GLOB CONC   SKID4                                           
+LOAD Z 839 844  3.00000-5.4866                              GLOB CONC   SKID4                                           
+LOAD Z 839 844  6.50000-5.4866                              GLOB CONC   SKID4                                           
+LOADCNLIVE                                                                                                              
+***LDS1**     41.011   -26.247    75.000    41.011    26.247    75.000   -24.606                                        
+***LDS2**     26.247    75.000   -24.606   -26.247    75.000  -100.000                                                  
+***LDS3**              0   1   3   0   0LIVE  -2EQUPPRES100PSFU                                                         
+LOAD Z 829 801         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 830 834         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 831 835         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 832 803         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 833 836         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 834 837         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 835 838         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 836 848         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 837 841         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 838 842         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 839 844         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 801 805         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 803 847         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 805 840         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 807 843         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+***LDS1**     24.606   -26.247    50.000    24.606    26.247    50.000   -24.606                                        
+***LDS2**     26.247    50.000   -24.606   -26.247    50.000   -50.000                                                  
+***LDS3**              0   1   3   0   0LIVE  -2EQUPPRES50PSFL                                                          
+LOAD Z 701 705         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 703 707         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 705 720         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 707 723         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 709 701         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 710 714         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 711 715         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 712 703         -0.4100       -0.4100                GLOB UNIF   50PSFL                                          
+LOAD Z 714 717         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 715 718         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 717 721         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 718 722         -0.8200       -0.8200                GLOB UNIF   50PSFL                                          
+LOAD Z 845 807         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 846 839         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOAD Z 847 845         -1.6400       -1.6400                GLOB UNIF   100PSFU                                         
+LOAD Z 848 846         -0.8200       -0.8200                GLOB UNIF   100PSFU                                         
+LOADCNMACH                                                                                                              
+LOAD   1000                   -3.1000                       GLOB JOIN   ENGINE                                          
+LOAD   3000                   -5.1000                       GLOB JOIN   COMPRESS                                        
+LOADCNMISC                                                                                                              
+LOAD Z 712 703         -0.1900       -0.1900                GLOB UNIF   WALK1                                           
+LOAD Z 703 707         -0.1900       -0.1900                GLOB UNIF   WALK1                                           
+LOAD Z 707 723         -0.1900       -0.1900                GLOB UNIF   WALK1                                           
+LOAD Z 833 836         -0.1900       -0.1900                GLOB UNIF   WALK2                                           
+LOAD Z 836 848         -0.1900       -0.1900                GLOB UNIF   WALK2                                           
+LOAD Z 839 844         -0.1900       -0.1900                GLOB UNIF   WALK2                                           
+LOAD   807                    -20.000                       GLOB JOIN   CRANE                                           
+***LDS1**     -8.000    20.000    50.000    -8.000    20.000    50.000                                                  
+***LDS2**              -10.000                                  34.000     0.100                                        
+***LDS3**      0.100   1   2   2   0   0MISC  -1EQUPSKIDFIREWALLX                                                       
+LOAD Z 705 720  3.95000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 705 720  4.05000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 717 721  3.95000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 717 721  4.05000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 718 722  3.95000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 718 722  4.05000-1.6667                              GLOB CONC   FIREWALL                                        
+LOAD Z 846 839         -0.1900       -0.1900                GLOB UNIF   WALK2                                           
+LOAD Z 848 846         -0.1900       -0.1900                GLOB UNIF   WALK2                                           
+LOAD   VB01                   -1.0000                       GLOB JOIN   VENTBOOM                                        
+LCOMB                                                                                                                   
+* OPERATIONAL COMBINATIONS                                                                                              
+LCOMB CMB1 MISC1.0000EQPT1.0000AREA0.5000LIVE1.0000DEAD1.0500MACH1.0000                                                 
+LCOMB CMB2 MISC1.0000EQPT1.0000AREA1.0000LIVE0.5000DEAD1.0500MACH1.0000                                                 
+END                                                                                                                     
+ **LEG1**    1   -24.000   -16.000    13.000   -24.000   -50.250  -261.000                                              
+ **LEG2**    1    75.000  -261.000    13.000   1   0   1                                                                
+ **LEG1**    3    24.000   -16.000    13.000    51.400   -50.250  -261.000                                              
+ **LEG2**    3    75.000  -261.000    13.000   1   0   1                                                                
+ **LEG1**    5   -24.000    16.000    13.000   -24.000    50.250  -261.000                                              
+ **LEG2**    5    75.000  -261.000    13.000   1   0   1                                                                
+ **LEG1**    7    24.000    16.000    13.000    51.400    50.250  -261.000                                              
+ **LEG2**    7    75.000  -261.000    13.000   1   0   1                                                                
+ **ELEV**     13.000 100    75.000 100    13.000 100    75.000 400                                                      
+ **ELEV**     50.000   0                                                                                                
+ **LGLB**   6                                                                                                           
+ **PLLB**   0                                                                                                           
+ **ROWS** ROW A > ROW B > ROW 1 ^ ROW 2 ^                  0                                                            
+ **CONN**    0   0   0   0   0   0   0   0   0   0   0   0   0   0                                                      
+ **JNCV** 0 0 0 0 0 0 1                                                                                                 
+END                                                                                                                     

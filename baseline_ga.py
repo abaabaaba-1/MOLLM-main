@@ -4,7 +4,9 @@ import argparse
 import random
 import json
 import copy
+import re
 import numpy as np
+import importlib
 from typing import List, Tuple
 
 # ----------------- 路径修正代码 [开始] -----------------
@@ -16,7 +18,8 @@ if project_root not in sys.path:
 from model.MOLLM import MOLLM, ConfigLoader
 from algorithm.MOO import MOO
 from algorithm.base import Item
-from problem.sacs_geo_jk.evaluator import _parse_and_modify_line
+
+MUTATOR_CACHE = {}
 
 
 class BaselineMOO(MOO):
@@ -50,12 +53,12 @@ class BaselineMOO(MOO):
         self.baseline_es_abs_tol = _es_get('abs_tol', 1e-4)
         # 相对改进阈值
         self.baseline_es_rel_tol = _es_get('rel_tol', 1e-3)
-        # 连续停滞轮数
-        self.baseline_es_patience = _es_get('patience', 6)
-        # 至少多少代后才开始判定
-        self.baseline_es_min_gen = _es_get('min_generations', 8)
-        # 至少多少唯一评估样本后开始判定
-        self.baseline_es_min_samples = _es_get('min_samples', 600)
+        # 连续停滞轮数 [Enhanced: 6 -> 10 for more patience]
+        self.baseline_es_patience = _es_get('patience', 10)
+        # 至少多少代后才开始判定 [Enhanced: 8 -> 12]
+        self.baseline_es_min_gen = _es_get('min_generations', 12)
+        # 至少多少唯一评估样本后开始判定 [Enhanced: 600 -> 1200]
+        self.baseline_es_min_samples = _es_get('min_samples', 1200)
         # old_score 必须大于该值才计入停滞逻辑
         self.baseline_es_min_score = _es_get('min_score', 0.05)
         # 是否在大跳跃后重置耐心
@@ -123,16 +126,28 @@ class BaselineMOO(MOO):
         offspring_design1 = {data_key: {}}
         offspring_design2 = {data_key: {}}
 
-        all_keys = list(design1[data_key].keys())
+        parent1_blocks = design1.get(data_key, {})
+        parent2_blocks = design2.get(data_key, {})
+        all_keys = sorted(set(parent1_blocks.keys()) | set(parent2_blocks.keys()))
 
-        # 交叉：基因从父代随机继承 (Uniform Crossover)
+        # 交叉：基因从父代随机继承 (Uniform Crossover)，允许父代缺少某些键
         for key in all_keys:
+            gene1 = parent1_blocks.get(key)
+            gene2 = parent2_blocks.get(key)
+            if gene1 is None and gene2 is None:
+                # 两个父代都缺失该基因，跳过
+                continue
+            if gene1 is None:
+                gene1 = gene2
+            if gene2 is None:
+                gene2 = gene1
+
             if random.random() < 0.5:
-                offspring_design1[data_key][key] = design1[data_key][key]
-                offspring_design2[data_key][key] = design2[data_key][key]
+                offspring_design1[data_key][key] = gene1
+                offspring_design2[data_key][key] = gene2
             else:
-                offspring_design1[data_key][key] = design2[data_key][key]
-                offspring_design2[data_key][key] = design1[data_key][key]
+                offspring_design1[data_key][key] = gene2
+                offspring_design2[data_key][key] = gene1
 
         # 变异 (使用自适应变异率和增强的强度)
         for offspring_design in [offspring_design1, offspring_design2]:
@@ -143,15 +158,43 @@ class BaselineMOO(MOO):
                 keys_to_mutate = random.sample(all_keys, num_mutations)
                 for key in keys_to_mutate:
                     if is_sacs_format:
-                        # SACS 格式：使用 _parse_and_modify_line 进行字符串变异
-                        original_line = offspring_design[data_key][key]
                         block_name = key.replace("_", " ")
-                        mutated_line = _parse_and_modify_line(original_line, block_name)
+                        mutator = self._get_block_mutator(block_name)
+                        original_line = offspring_design[data_key][key]
+                        mutated_line = mutator(original_line, block_name)
                         offspring_design[data_key][key] = mutated_line
+                        
+                        # [CRITICAL FIX] Handle coupled joints: sync slave joint with master
+                        if block_name.startswith("JOINT"):
+                            joint_id = block_name.split(" ")[1]
+                            coupled_joints_map = self.config.get('sacs.coupled_joints', {})
+                            if joint_id in coupled_joints_map:
+                                slave_id = coupled_joints_map[joint_id]
+                                slave_key = f"JOINT_{slave_id}"
+                                if slave_key in offspring_design[data_key]:
+                                    # Get coordinates from mutated master joint
+                                    num_pattern = re.compile(r'-?\d+\.\d*(?:[eE][-+]?\d+)?')
+                                    coords = [float(n) for n in num_pattern.findall(mutated_line)]
+                                    if len(coords) >= 3:
+                                        # Update slave joint with master's coordinates
+                                        original_slave_line = offspring_design[data_key][slave_key]
+                                        slave_matches = list(num_pattern.finditer(original_slave_line))
+                                        if len(slave_matches) >= 3:
+                                            line_list = list(original_slave_line)
+                                            for idx, (match, new_val) in enumerate(zip(slave_matches[:3], coords[:3])):
+                                                old_text = match.group(0)
+                                                old_len = len(old_text)
+                                                precision = len(old_text.split('.')[1]) if '.' in old_text else 0
+                                                new_text = format(new_val, f">{old_len}.{precision}f")
+                                                if len(new_text) > old_len:
+                                                    new_text = new_text[:old_len]
+                                                start, end = match.span()
+                                                line_list[start:end] = list(new_text)
+                                            offspring_design[data_key][slave_key] = "".join(line_list).rstrip()
                     else:
-                        # Stellarator_VMEC 格式：对系数进行数值变异（2% 扰动）
                         original_value = offspring_design[data_key][key]
-                        mutation_factor = random.uniform(0.98, 1.02)
+                        # [Enhanced] Increase mutation strength from ±5% to ±10% for better exploration
+                        mutation_factor = random.uniform(0.90, 1.10)
                         offspring_design[data_key][key] = original_value * mutation_factor
 
         offspring1_str = json.dumps(offspring_design1)
@@ -159,6 +202,36 @@ class BaselineMOO(MOO):
 
         new_items = [self.item_factory.create(offspring1_str), self.item_factory.create(offspring2_str)]
         return new_items, None, None
+
+    def _get_block_mutator(self, block_name: str):
+        """Fetches a mutation function appropriate for the block prefix via evaluator module."""
+        prefix = block_name.split()[0]
+        if prefix == 'JOINT':
+            key = 'mutator_joint'
+            attr_candidates = ['_parse_and_modify_line']
+        elif prefix in {'GRUP', 'PGRUP'}:
+            key = 'mutator_section'
+            attr_candidates = ['_parse_and_modify_section_line', '_parse_and_modify_line']
+        elif prefix.startswith('BC') or prefix.startswith('COEF'):
+            key = 'mutator_vmec'
+            attr_candidates = ['_parse_and_modify_vmec_line', '_parse_and_modify_line']
+        else:
+            key = f"mutator_{prefix}"
+            attr_candidates = ['_parse_and_modify_line']
+
+        if key not in MUTATOR_CACHE:
+            module_path = self.config.get('evalutor_path')
+            module = importlib.import_module(module_path)
+            target = None
+            for attr in attr_candidates:
+                fn = getattr(module, attr, None)
+                if callable(fn):
+                    target = fn
+                    break
+            if target is None:
+                target = lambda line, *_: line
+            MUTATOR_CACHE[key] = target
+        return MUTATOR_CACHE[key]
 
     # ========== 重写生成后代 (已修改) ==========
     def generate_offspring(self, population: list, offspring_times: int) -> list:
@@ -205,7 +278,9 @@ class BaselineMOO(MOO):
             return
 
         # 冷启动条件判断
-        current_gen = self.time_step
+        # Fixed: Use num_gen instead of time_step (time_step is only updated in use_au mode)
+        # Use getattr to safely access num_gen (it's initialized in run() method, not __init__)
+        current_gen = getattr(self, 'num_gen', 0)
         current_samples = len(self.mol_buffer)
         if current_gen < self.baseline_es_min_gen or current_samples < self.baseline_es_min_samples:
             return

@@ -14,19 +14,39 @@ import logging
 PKL_FILE_PATH = os.path.join('moo_results', 'check.pkl')
 
 # 指向您的SACS项目文件夹 (包含 sacinp.demo06 文件的目录)
-SACS_PROJECT_PATH = "/mnt/d/wsl_sacs_exchange/demo06_project/Demo06"
+# Windows 路径: D:\wsl_sacs_exchange\sacs_project\Demo06_Geo
+# WSL 路径: /mnt/d/wsl_sacs_exchange/sacs_project/Demo06_Geo
+SACS_PROJECT_PATH = "/mnt/d/wsl_sacs_exchange/sacs_project/Demo06_Geo"
 
 # 指定生成的模型文件要保存到的目录
 OUTPUT_DIR = "best_models_output"
 
 # --- 脚本依赖 ---
-# 确保此脚本可以找到 problem.sacs.sacs_file_modifier
-try:
-    from problem.sacs.sacs_file_modifier import SacsFileModifier
-except ImportError:
+# 尝试从多个可能的路径导入 SacsFileModifier
+SacsFileModifier = None
+possible_paths = [
+    #'problem.sacs_section_pf.sacs_file_modifier',
+    #'problem.sacs_geo_pf.sacs_file_modifier',
+    #'problem.sacs_section_jk.sacs_file_modifier',
+    'problem.sacs_geo_jk.sacs_file_modifier',
+
+]
+
+for path in possible_paths:
+    try:
+        module = __import__(path, fromlist=['SacsFileModifier'])
+        SacsFileModifier = module.SacsFileModifier
+        print(f"成功从 {path} 导入 SacsFileModifier")
+        break
+    except ImportError:
+        continue
+
+if SacsFileModifier is None:
     print("错误: 无法导入 SacsFileModifier。")
-    print("请确保此脚本与您的项目结构保持一致，或者将 problem 文件夹的路径添加到 PYTHONPATH。")
-    exit()
+    print("请确保以下路径之一存在：")
+    for path in possible_paths:
+        print(f"  - {path}")
+    exit(1)
 
 # 为了让脚本独立运行，定义最小化的 Item 类结构
 try:
@@ -157,7 +177,11 @@ def main():
             
             # 4. 如果成功，将修改后的文件复制到输出目录
             if success:
-                output_filename = f"sacinp_best_{obj}.demo06"
+                # 自动检测文件扩展名（demo13 或 demo06）
+                input_file_ext = modifier.input_file.suffix if hasattr(modifier.input_file, 'suffix') else '.demo13'
+                if not input_file_ext or input_file_ext == '':
+                    input_file_ext = '.demo13'  # 默认使用 demo13
+                output_filename = f"sacinp_best_{obj}{input_file_ext}"
                 output_path = os.path.join(OUTPUT_DIR, output_filename)
                 
                 # 从SACS项目目录复制已修改的文件到输出目录
