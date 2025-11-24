@@ -48,6 +48,26 @@ W_SECTIONS_LIBRARY = [
     "W24X192", "W24X207", "W24X229"
 ]
 
+# 为不同尺寸系列建立独立库，避免跨系列混用
+W8_SECTIONS_LIBRARY = [
+    "W8X10", "W8X13", "W8X15", "W8X18", "W8X21", "W8X24", "W8X28",
+    "W8X31", "W8X35", "W8X40", "W8X48", "W8X58", "W8X67"
+]
+
+W12_SECTIONS_LIBRARY = [
+    "W12X14", "W12X16", "W12X19", "W12X22", "W12X26", "W12X30", "W12X35",
+    "W12X40", "W12X45", "W12X50", "W12X53", "W12X58", "W12X65", "W12X72",
+    "W12X79", "W12X87", "W12X96", "W12X106", "W12X120", "W12X136", "W12X152",
+    "W12X170", "W12X190", "W12X210", "W12X230", "W12X252", "W12X279", "W12X305", "W12X336"
+]
+
+# 汇总所有 I-beam 库的字典，按系列名称索引
+I_BEAM_LIBRARIES = {
+    "W8": W8_SECTIONS_LIBRARY,
+    "W12": W12_SECTIONS_LIBRARY,
+    "W24": W_SECTIONS_LIBRARY
+}
+
 def _parse_and_modify_line(line: str, block_name: str) -> str:
     try:
         keyword = block_name.split()[0]
@@ -56,15 +76,29 @@ def _parse_and_modify_line(line: str, block_name: str) -> str:
         if keyword == "GRUP" and re.search(r'(W\d+X\d+)', line):
             match = re.search(r'(W\d+X\d+)', line)
             current_section = match.group(1)
+            
+            # 自动识别系列（W8, W12, W24 等）
+            series_match = re.match(r'(W\d+)X', current_section)
+            if not series_match:
+                logging.warning(f"Cannot parse series from '{current_section}'. Skipping.")
+                return original_line_stripped
+            
+            series_name = series_match.group(1)
+            section_library = I_BEAM_LIBRARIES.get(series_name)
+            
+            if not section_library:
+                logging.warning(f"No library found for series '{series_name}'. Skipping.")
+                return original_line_stripped
+            
             try:
-                current_index = W_SECTIONS_LIBRARY.index(current_section)
+                current_index = section_library.index(current_section)
             except ValueError:
-                logging.warning(f"Section '{current_section}' for GRUP '{block_name}' not in library. Skipping.")
+                logging.warning(f"Section '{current_section}' not in {series_name} library. Skipping.")
                 return original_line_stripped
 
             step = random.randint(1, 3) * random.choice([-1, 1])
-            new_index = np.clip(current_index + step, 0, len(W_SECTIONS_LIBRARY) - 1)
-            new_section = W_SECTIONS_LIBRARY[new_index]
+            new_index = np.clip(current_index + step, 0, len(section_library) - 1)
+            new_section = section_library[new_index]
             
             return original_line_stripped.replace(current_section, new_section, 1)
 
@@ -77,13 +111,17 @@ def _parse_and_modify_line(line: str, block_name: str) -> str:
                 logging.warning(f"Could not parse OD/WT for GRUP '{block_name}': '{line.strip()}'. Skipping.")
                 return original_line_stripped
 
+            # 保存原始值作为下界参考，允许向下探索更轻的截面
+            original_od, original_wt = od_val, wt_val
+            
             if random.choice([True, False]):
                 od_val *= random.uniform(0.9, 1.1)
             else:
                 wt_val *= random.uniform(0.9, 1.1)
 
-            od_val = np.clip(od_val, 10.0, 99.999)
-            wt_val = np.clip(wt_val, 0.5, 9.999)
+            # 使用更宽松的边界：允许缩小到原值的 50%，扩大到 2 倍（或 99.999 上限）
+            od_val = np.clip(od_val, max(2.0, original_od * 0.5), min(99.999, original_od * 2.0))
+            wt_val = np.clip(wt_val, max(0.25, original_wt * 0.5), min(9.999, original_wt * 2.0))
             
             new_od_str = f"{od_val:6.3f}"
             new_wt_str = f"{wt_val:5.3f}"
@@ -177,7 +215,7 @@ def generate_initial_population(config, seed):
     try_count = 0
     while len(initial_population_jsons) < population_size and try_count < max_tries:
         base_candidate = copy.deepcopy(random.choice(INITIAL_SEEDS))
-        num_modifications = random.randint(1, len(optimizable_blocks) // 2)
+        num_modifications = random.randint(1, max(1, len(optimizable_blocks) // 2))
         blocks_to_modify_names = random.sample(optimizable_blocks, min(num_modifications, len(optimizable_blocks)))
 
         for block_name in blocks_to_modify_names:
@@ -210,6 +248,23 @@ class RewardingSystem:
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
         self.coupled_joints = config.get('sacs.coupled_joints', {}) or {}
+        
+        # 动态归一化参数（与 sacs_section_jk 一致）
+        self.baseline_weight_tonnes = None
+        self.weight_ratio_bounds = config.get('sacs.weight_ratio_bounds', [0.5, 2.0])
+        if not (isinstance(self.weight_ratio_bounds, (list, tuple)) and len(self.weight_ratio_bounds) == 2):
+            self.weight_ratio_bounds = [0.5, 2.0]
+        self.weight_bounds = config.get('sacs.weight_bounds', [50.0, 5000.0])
+        if not (isinstance(self.weight_bounds, (list, tuple)) and len(self.weight_bounds) == 2):
+            self.weight_bounds = [50.0, 5000.0]
+        
+        try:
+            base_weight_res = calculate_sacs_weight_from_db(self.sacs_project_path)
+            if base_weight_res.get('status') == 'success':
+                self.baseline_weight_tonnes = max(1e-6, float(base_weight_res['total_weight_tonnes']))
+                self.logger.info(f"Baseline weight for normalization: {self.baseline_weight_tonnes:.3f} tonnes")
+        except Exception as exc:
+            self.logger.warning(f"Failed to read baseline weight for normalization: {exc}")
 
     def evaluate(self, items):
         invalid_num = 0
@@ -255,8 +310,7 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
 
-                filtered_blocks = self._apply_coupled_joint_constraints(filtered_blocks)
-
+                # 截面优化不涉及 coupled joints，无需调用约束同步
                 if not self.modifier.replace_code_blocks(filtered_blocks):
                     self._assign_penalty(item, "SACS file modification failed")
                     invalid_num += 1
@@ -349,15 +403,26 @@ class RewardingSystem:
         """
         transformed = {}
         
-        # --- 1. Weight Transformation (Correct) ---
-        w_min, w_max = 50, 5000   
-        w = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
-        if self.obj_directions.get('weight') == 'min':
-            # This correctly maps low weight to a low score [0, 1]
-            transformed['weight'] = (w - w_min) / (w_max - w_min)
+        # --- 1. Weight Transformation (dynamic when baseline available) ---
+        if self.baseline_weight_tonnes:
+            min_ratio, max_ratio = self.weight_ratio_bounds
+            weight = penalized_results.get('weight', self.baseline_weight_tonnes)
+            ratio = weight / self.baseline_weight_tonnes
+            ratio = np.clip(ratio, min_ratio, max_ratio)
+            denom = max(max_ratio - min_ratio, 1e-8)
+            weight_norm = (ratio - min_ratio) / denom
         else:
-            # This correctly maps high weight to a low score [0, 1]
-            transformed['weight'] = (w_max - w) / (w_max - w_min)
+            w_min, w_max = self.weight_bounds
+            w_min, w_max = float(w_min), float(w_max)
+            if w_min >= w_max:
+                w_min, w_max = 50.0, 5000.0
+            weight = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
+            weight_norm = (weight - w_min) / (w_max - w_min)
+        
+        if self.obj_directions.get('weight') == 'min':
+            transformed['weight'] = weight_norm
+        else:
+            transformed['weight'] = 1.0 - weight_norm
 
         # --- 2. Stress (UC) Transformations (Normalized to [0, 1] for fair comparison) ---
         # Normalize UC values to [0, 1] to match geometric optimization and enable fair hypervolume comparison
@@ -380,63 +445,3 @@ class RewardingSystem:
             transformed[key] = np.clip(val, 0.0, 1.0)
             
         return transformed
-
-    def _apply_coupled_joint_constraints(self, candidate_blocks: dict) -> dict:
-        """
-        Section problems seldom edit joints, but if coupled joint definitions exist we keep
-        master/slave nodes synchronized so future JSON payloads cannot desync them.
-        """
-        if not candidate_blocks or not self.coupled_joints:
-            return candidate_blocks
-
-        enforced_blocks = dict(candidate_blocks)
-        required_joint_keys = {
-            f"JOINT_{joint_id}"
-            for ids in self.coupled_joints.items()
-            for joint_id in ids
-        }
-        missing_keys = [k for k in required_joint_keys if k not in enforced_blocks]
-        baseline_lines = self._load_joint_lines_from_file(missing_keys)
-
-        for master_id, slave_id in self.coupled_joints.items():
-            master_key = f"JOINT_{master_id}"
-            slave_key = f"JOINT_{slave_id}"
-
-            master_line = enforced_blocks.get(master_key) or baseline_lines.get(master_key)
-            slave_line = enforced_blocks.get(slave_key) or baseline_lines.get(slave_key)
-
-            if not master_line:
-                continue
-
-            master_coords = _get_coords_from_modified_line(master_line)
-            if not master_coords:
-                continue
-
-            base_slave_line = slave_line or master_line
-            enforced_blocks[slave_key] = _build_slave_joint_line(base_slave_line, master_coords)
-
-        return enforced_blocks
-
-    def _load_joint_lines_from_file(self, joint_keys) -> dict:
-        if not joint_keys:
-            return {}
-
-        input_path = getattr(self.modifier, "input_file", Path(self.sacs_project_path) / "sacinp.demo13")
-        try:
-            with open(input_path, 'r', encoding='utf-8', errors='ignore') as f:
-                all_lines = f.readlines()
-        except FileNotFoundError:
-            return {}
-
-        joint_line_map = {}
-        for joint_key in joint_keys:
-            parts = joint_key.split('_')
-            if len(parts) != 2:
-                continue
-            joint_id = parts[1]
-            pattern = re.compile(r"^\s*JOINT\s+" + re.escape(joint_id))
-            for line in all_lines:
-                if pattern.search(line):
-                    joint_line_map[joint_key] = line.rstrip('\n')
-                    break
-        return joint_line_map

@@ -504,15 +504,33 @@ class RewardingSystem:
         self.runner = SacsRunner(project_path=self.sacs_project_path, sacs_install_path=config.get('sacs.install_path'))
         self.objs = config.get('goals', [])
         self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
-        # 计算基线指标用于动态归一化（若可用）
-        self.baseline_weight_tonnes = None
-        try:
-            base_weight_res = calculate_sacs_weight_from_db(self.sacs_project_path)
-            if base_weight_res.get('status') == 'success':
-                self.baseline_weight_tonnes = max(1e-6, float(base_weight_res['total_weight_tonnes']))
-                self.logger.info(f"动态归一化: 基线重量 = {self.baseline_weight_tonnes:.3f} 吨")
-        except Exception as e:
-            self.logger.warning(f"无法读取基线重量用于动态归一化: {e}")
+        
+        # 动态归一化参数（与 sacs_section_jk 一致）
+        self.weight_ratio_bounds = config.get('sacs.weight_ratio_bounds', [0.5, 2.0])
+        if not (isinstance(self.weight_ratio_bounds, (list, tuple)) and len(self.weight_ratio_bounds) == 2):
+            self.weight_ratio_bounds = [0.5, 2.0]
+        self.weight_bounds = config.get('sacs.weight_bounds', [50.0, 5000.0])
+        if not (isinstance(self.weight_bounds, (list, tuple)) and len(self.weight_bounds) == 2):
+            self.weight_bounds = [50.0, 5000.0]
+        
+        # [FIX] 优先使用config中的固定baseline_weight，确保不同运行之间的一致性
+        self.baseline_weight_tonnes = config.get('sacs.baseline_weight_tonnes')
+        
+        if self.baseline_weight_tonnes is not None:
+            self.logger.critical(f"[CONFIG] Using FIXED baseline_weight: {self.baseline_weight_tonnes:.6f} tonnes")
+            self.logger.critical("[INFO] This ensures consistent normalization across all algorithm runs.")
+        else:
+            # 如果config没有指定，才从SACS文件动态读取（不推荐）
+            self.logger.warning("[WARNING] No fixed baseline_weight in config. Reading from SACS file...")
+            self.logger.warning("[WARNING] This may cause inconsistent results across different runs!")
+            try:
+                base_weight_res = calculate_sacs_weight_from_db(self.sacs_project_path)
+                if base_weight_res.get('status') == 'success':
+                    self.baseline_weight_tonnes = max(1e-6, float(base_weight_res['total_weight_tonnes']))
+                    self.logger.warning(f"[DYNAMIC] Baseline weight from SACS file: {self.baseline_weight_tonnes:.6f} tonnes")
+            except Exception as exc:
+                self.logger.error(f"Failed to read baseline weight for normalization: {exc}")
+                self.baseline_weight_tonnes = None
 
     def evaluate(self, items):
         invalid_num = 0
@@ -547,19 +565,25 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
 
-                # 仅针对“几何优化”允许修改 JOINT_*（或配置声明的目标）；过滤掉 GRUP_/PGRUP_ 等截面相关卡
+                # 仅针对"几何优化"允许修改 JOINT_*，但必须在配置的白名单内（optimizable_joints + coupled slaves）
                 allowed_keys = set()
-                # 允许所有 JOINT_*（几何节点）
-                allowed_keys.update([k for k in new_code_blocks.keys() if k.startswith('JOINT_')])
-                # 若配置显式给出可优化节点/耦合节点，也加入白名单（健壮性）
                 opt_joints = self.config.get('sacs.optimizable_joints', []) or []
                 coupled_map = self.config.get('sacs.coupled_joints', {}) or {}
+                
+                # 构建严格白名单：只允许 optimizable_joints 及其 coupled slaves
                 for j in opt_joints:
                     parts = j.split()
                     if len(parts) == 2 and parts[0] == 'JOINT':
-                        allowed_keys.add(f"JOINT_{parts[1]}")
-                        if parts[1] in coupled_map:
-                            allowed_keys.add(f"JOINT_{coupled_map[parts[1]]}")
+                        joint_id = parts[1]
+                        allowed_keys.add(f"JOINT_{joint_id}")
+                        # 如果这个 joint 是主节点，也允许其从节点
+                        if joint_id in coupled_map:
+                            allowed_keys.add(f"JOINT_{coupled_map[joint_id]}")
+                
+                # 同时允许所有从节点对应的主节点（防止 LLM 只改了从节点的情况）
+                for master_id, slave_id in coupled_map.items():
+                    allowed_keys.add(f"JOINT_{master_id}")
+                    allowed_keys.add(f"JOINT_{slave_id}")
 
                 filtered_blocks = {k: v for k, v in new_code_blocks.items() if k in allowed_keys}
 
@@ -688,9 +712,8 @@ class RewardingSystem:
     def _apply_penalty(self, results: dict, max_uc: float) -> dict:
         penalized_results = results.copy()
         if max_uc > 1.0:
-            # 更柔和且随超限平方增长的惩罚，并做上限截断，避免过早塌缩
-            violation = max_uc - 1.0
-            penalty_factor = min(6.0, 1.0 + 3.0 * (violation ** 2))
+            # 统一使用线性惩罚策略（与 sacs_section_jk 一致）
+            penalty_factor = 1.0 + (max_uc - 1.0) * 5.0
             self.logger.warning(f"Infeasible design: max_uc={max_uc:.3f}. Applying penalty factor {penalty_factor:.2f}.")
             if self.obj_directions.get('weight') == 'min':
                 penalized_results['weight'] *= penalty_factor
@@ -703,23 +726,36 @@ class RewardingSystem:
         item.assign_results(results)
 
     def _transform_objectives(self, penalized_results: dict) -> dict:
+        """
+        Transforms raw, penalized objective values into normalized scores for the optimizer.
+        The optimizer's goal is to MINIMIZE the mean of these transformed scores.
+        Therefore, a better raw value (e.g., lower weight) must correspond to a lower transformed score.
+        """
         transformed = {}
-        uc_min, uc_max = 0.0, 1.0
-        # 动态权重归一化：相对基线的比例，限制在 [0.5, 2.0] 范围
+        
+        # --- 1. Weight Transformation (dynamic when baseline available) ---
         if self.baseline_weight_tonnes:
+            min_ratio, max_ratio = self.weight_ratio_bounds
             weight = penalized_results.get('weight', self.baseline_weight_tonnes)
-            ratio = np.clip(weight / self.baseline_weight_tonnes, 0.5, 2.0)
-            # 将 [0.5, 2.0] 线性映射到 [0, 1]
-            weight_norm = (ratio - 0.5) / 1.5
+            ratio = weight / self.baseline_weight_tonnes
+            ratio = np.clip(ratio, min_ratio, max_ratio)
+            denom = max(max_ratio - min_ratio, 1e-8)
+            weight_norm = (ratio - min_ratio) / denom
         else:
-            # 回退到固定区间
-            w_min, w_max = 50.0, 5000.0
+            w_min, w_max = self.weight_bounds
+            w_min, w_max = float(w_min), float(w_max)
+            if w_min >= w_max:
+                w_min, w_max = 50.0, 5000.0
             weight = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
             weight_norm = (weight - w_min) / (w_max - w_min)
+        
         if self.obj_directions.get('weight') == 'min':
             transformed['weight'] = weight_norm
         else:
             transformed['weight'] = 1.0 - weight_norm
+        
+        # --- 2. Stress (UC) Transformations (Normalized to [0, 1] for fair comparison) ---
+        uc_min, uc_max = 0.0, 1.0
 
         axial_uc = np.clip(penalized_results.get('axial_uc_max', uc_max), uc_min, uc_max)
         if self.obj_directions.get('axial_uc_max') == 'min':

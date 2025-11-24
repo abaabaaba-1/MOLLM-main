@@ -12,3 +12,6 @@ python run_all_baselines.py --baselines ga --seeds 42 43 44 45 46
 
 # 运行所有baseline，每个5个不同的seed
 python run_all_baselines.py --seeds 42 43 44 45 46
+
+
+python main.py sacs_section_jk/config.yaml --seed 43

@@ -1,28 +1,65 @@
-genetic_gfn/multi_objective/genetic_gfn/results/
-__pycache__/
-.ipynb_checkpoints/
-genetic_gfn/multi_objective/data/docked_mols.h5 
-genetic_gfn/multi_objective/oracle/
-
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.ipynb_checkpoints/
 
+# Virtual environments
 .venv/
 venv/
 env/
 .env
+.env.*
 
+# IDE
 .vscode/
 .idea/
 
+# Results and outputs (IMPORTANT: keeps results separate per machine)
 moo_results/
+logs/
+output/
+oracle/
+generated_plots/
+recalculated_plots/
+sacs_visualizations/
+elite_seeds/
+best_models_output/
+
+# Data files
 *.pkl
+*.h5
+*.db
+sacsdb.db
+
+# Images
 *.png
 *.jpeg
 *.jpg
+*.gif
+*.bmp
+
+# Logs
 *.log
 
+# Temporary files
 *.bak
 *.$$$
+*.tmp
+*.swp
+*~
+
+# SACS specific
+*.demo06.bak
+*.demo13.bak
+sacinp_before_run_*.demo06
+sacinp_before_run_*.demo13
+
+# Large data files
+genetic_gfn/multi_objective/genetic_gfn/results/
+genetic_gfn/multi_objective/data/docked_mols.h5
+genetic_gfn/multi_objective/oracle/
+
+# Jupyter notebook outputs (optional - remove if you want to sync notebooks with outputs)
+*.ipynb_checkpoints/
