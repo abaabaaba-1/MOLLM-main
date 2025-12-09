@@ -179,7 +179,7 @@ class SacsRunner:
 
     def _create_backup(self, desc: str) -> Optional[Path]:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = self.backup_dir / f"sacinp_{desc}_{ts}.demo13"
+        backup_path = self.backup_dir / f"sacinp_{desc}_{ts}.{self.project_suffix}"
         try:
             shutil.copy2(self.input_file, backup_path)
             self.logger.info(f"已创建输入文件备份: {backup_path.name}")

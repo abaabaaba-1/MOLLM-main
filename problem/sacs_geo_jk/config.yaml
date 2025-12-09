@@ -10,7 +10,7 @@ resume: False
 model:
   name: zgca,gemini-2.5-flash-nothinking
   base_url: http://35.220.164.252:3888/v1/chat/completions
-  api_key: sk-UQSdTgxybYPRjg0WBq3v6NCxMMDNuIanMCdHy6mp9cGWPCTs
+  api_key: sk-AmgLOigwVBGlAUHkwvfcuMAws7QPAKjfeQF64SiPykZYj5JM
   prompt_module: Prompt
   experience_prob: 0.5
   crossover_prob: 0.7
@@ -105,3 +105,6 @@ optimization:
 # Disable early stopping for baseline GA to ensure full 2000 evaluations
 baseline_early_stopping:
   enable: False
+
+# Disable builtin early stopping in the main MOO loop
+early_stopping: False

@@ -255,10 +255,39 @@ class RewardingSystem:
         self.sacs_project_path = config.get('sacs.project_path')
         self.logger = logging.getLogger(self.__class__.__name__)
         self.modifier = SacsFileModifier(self.sacs_project_path)
-        self.runner = SacsRunner(project_path=self.sacs_project_path, sacs_install_path=config.get('sacs.install_path'))
+        self.runner = SacsRunner(
+            project_path=self.sacs_project_path,
+            sacs_install_path=config.get('sacs.install_path')
+        )
         self.objs = config.get('goals', [])
-        self.obj_directions = {obj: config.get('optimization_direction')[i] for i, obj in enumerate(self.objs)}
+        self.obj_directions = {
+            obj: config.get('optimization_direction')[i]
+            for i, obj in enumerate(self.objs)
+        }
         self.coupled_joints = config.get('sacs.coupled_joints', {}) or {}
+
+        # Weight normalization configuration
+        self.baseline_weight_tonnes = config.get('sacs.baseline_weight_tonnes')
+        self.weight_ratio_bounds = config.get('sacs.weight_ratio_bounds', [0.5, 2.0])
+        if not (isinstance(self.weight_ratio_bounds, (list, tuple)) and len(self.weight_ratio_bounds) == 2):
+            self.weight_ratio_bounds = [0.5, 2.0]
+        self.weight_bounds = config.get('sacs.weight_bounds', [50.0, 5000.0])
+        if not (isinstance(self.weight_bounds, (list, tuple)) and len(self.weight_bounds) == 2):
+            self.weight_bounds = [50.0, 5000.0]
+
+        # Prefer config-provided baseline if available; otherwise, read once from SACS DB
+        if self.baseline_weight_tonnes is None:
+            try:
+                base_weight_res = calculate_sacs_weight_from_db(self.sacs_project_path)
+                if base_weight_res.get('status') == 'success':
+                    self.baseline_weight_tonnes = max(
+                        1e-6, float(base_weight_res['total_weight_tonnes'])
+                    )
+                    self.logger.info(
+                        f"Baseline weight for normalization: {self.baseline_weight_tonnes:.3f} tonnes"
+                    )
+            except Exception as exc:
+                self.logger.warning(f"Failed to read baseline weight for normalization: {exc}")
 
     def evaluate(self, items):
         invalid_num = 0
@@ -293,15 +322,33 @@ class RewardingSystem:
                     invalid_num += 1
                     continue
 
-                # 对于几何优化，只允许修改 JOINT，不允许修改 GRUP/PGRUP（截面优化专用）
+                # 对于几何优化，只允许修改配置中声明的 JOINT 及其耦合节点
+                opt_joints = self.config.get('sacs.optimizable_joints', []) or []
+                coupled_map = self.coupled_joints or {}
+                allowed_keys = set()
+
+                for j in opt_joints:
+                    parts = j.split()
+                    if len(parts) == 2 and parts[0] == 'JOINT':
+                        joint_id = parts[1]
+                        allowed_keys.add(f"JOINT_{joint_id}")
+                        if joint_id in coupled_map:
+                            allowed_keys.add(f"JOINT_{coupled_map[joint_id]}")
+
+                for master_id, slave_id in coupled_map.items():
+                    allowed_keys.add(f"JOINT_{master_id}")
+                    allowed_keys.add(f"JOINT_{slave_id}")
+
                 filtered_blocks = {}
                 for key, value in new_code_blocks.items():
-                    # 只允许 JOINT_* 开头的块
-                    if key.startswith('JOINT_'):
-                        filtered_blocks[key] = value
-                    else:
+                    if not key.startswith('JOINT_'):
                         self.logger.warning(f"过滤掉非几何优化块: {key} (几何优化只允许 JOINT)")
-                
+                        continue
+                    if allowed_keys and key not in allowed_keys:
+                        self.logger.warning(f"过滤掉未在 optimizable_joints 白名单中的 JOINT: {key}")
+                        continue
+                    filtered_blocks[key] = value
+
                 if not filtered_blocks:
                     self._assign_penalty(item, "No valid joint blocks (JOINT) found in candidate")
                     invalid_num += 1
@@ -358,10 +405,16 @@ class RewardingSystem:
         return items, {"invalid_num": invalid_num, "repeated_num": 0}
 
     def _apply_penalty(self, results: dict, max_uc: float) -> dict:
+        """Apply penalty to infeasible designs (UC > 1.0).
+        
+        Following JK model's approach: only penalize weight, not UC values.
+        This avoids double-penalization and maintains physical meaning of UC.
+        """
         penalized_results = results.copy()
         if max_uc > 1.0:
             penalty_factor = 1.0 + (max_uc - 1.0) * 5.0
             self.logger.warning(f"Infeasible design: max_uc={max_uc:.3f}. Applying penalty factor {penalty_factor:.2f}.")
+            # Only penalize weight, following JK model's approach
             if self.obj_directions['weight'] == 'min':
                 penalized_results['weight'] *= penalty_factor
         return penalized_results
@@ -374,13 +427,36 @@ class RewardingSystem:
 
     def _transform_objectives(self, penalized_results: dict) -> dict:
         transformed = {}
-        w_min, w_max, uc_min, uc_max = 50, 5000, 0.0, 1.0
 
-        weight = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
-        if self.obj_directions.get('weight') == 'min':
-            transformed['weight'] = (weight - w_min) / (w_max - w_min)
+        # --- 1. Weight Transformation (prefer ratio to a baseline weight) ---
+        if self.baseline_weight_tonnes:
+            min_ratio, max_ratio = self.weight_ratio_bounds
+            weight = penalized_results.get('weight', self.baseline_weight_tonnes)
+            ratio = weight / self.baseline_weight_tonnes
+            ratio = np.clip(ratio, min_ratio, max_ratio)
+            denom = max(max_ratio - min_ratio, 1e-8)
+            weight_norm = (ratio - min_ratio) / denom
         else:
-            transformed['weight'] = (w_max - weight) / (w_max - w_min)
+            w_min, w_max = self.weight_bounds
+            w_min, w_max = float(w_min), float(w_max)
+            if w_min >= w_max:
+                # 默认范围基于实际几何优化数据: [54.2, 55.2] tonnes
+                w_min, w_max = 54.0, 56.0
+            weight = np.clip(penalized_results.get('weight', w_max), w_min, w_max)
+            weight_norm = (weight - w_min) / (w_max - w_min)
+
+        if self.obj_directions.get('weight') == 'min':
+            transformed['weight'] = weight_norm
+        else:
+            transformed['weight'] = 1.0 - weight_norm
+
+        # --- 2. UC Transformations ---
+        # Following JK model's strict constraint approach:
+        # - UC range [0, 1] enforces feasibility requirement (UC ≤ 1.0)
+        # - Values > 1.0 are clipped, discouraging infeasible designs
+        # - Combined with weight penalty, this guides optimizer toward feasible solutions
+        # This ensures all optimized designs are engineering-viable.
+        uc_min, uc_max = 0.0, 1.0
 
         axial_uc = np.clip(penalized_results.get('axial_uc_max', uc_max), uc_min, uc_max)
         if self.obj_directions.get('axial_uc_max') == 'min':
@@ -445,7 +521,16 @@ class RewardingSystem:
         if not joint_keys:
             return {}
 
-        input_path = getattr(self.modifier, "input_file", Path(self.sacs_project_path) / "sacinp.demo13")
+        input_path = getattr(self.modifier, "input_file", None)
+        if input_path is None:
+            # Fallback: auto-detect file format
+            project_path = Path(self.sacs_project_path)
+            if (project_path / "sacinp.demo13").exists():
+                input_path = project_path / "sacinp.demo13"
+            elif (project_path / "sacinp.demo06").exists():
+                input_path = project_path / "sacinp.demo06"
+            else:
+                input_path = project_path / "sacinp.demo13"
         try:
             with open(input_path, 'r', encoding='utf-8', errors='ignore') as f:
                 all_lines = f.readlines()

@@ -1,0 +1,140 @@
+\begin{thebibliography}{20}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Al-Shafii et~al.(2023)Al-Shafii, Liew, and Zaidi]{alshafii2023multi}
+M.~Z.~N. Al-Shafii, M.~S. Liew, and W.~P. N. M. K.~W. Zaidi.
+\newblock Multi-objective optimization of offshore wind turbine jacket support
+  structures considering fatigue and ultimate limit states.
+\newblock \emph{Ocean Engineering}, 284:\penalty0 115264, 2023.
+
+\bibitem[Alwashah et~al.(2025)Alwashah, Liu, Xiao, Mueller, and
+  Shao]{alwashah2025generative}
+Z.~Alwashah, H.~Liu, B.~Xiao, S.~Mueller, and X.~Shao.
+\newblock Generative {AI} in construction: Emerging trends and use cases.
+\newblock In \emph{Proceedings of the {CIB} World Building Congress}, Purdue
+  University, IN, USA, jun 2025.
+
+\bibitem[Benítez-Suárez et~al.(2025)Benítez-Suárez, Quevedo-Reina, Álamo,
+  and Padrón]{benitez2025pso}
+B.~Benítez-Suárez, R.~Quevedo-Reina, G.~M. Álamo, and L.~A. Padrón.
+\newblock {PSO}-based design and optimization of jacket substructures for
+  offshore wind turbines.
+\newblock \emph{Marine Structures}, 101:\penalty0 103759, 2025.
+
+\bibitem[Dai et~al.(2025)Dai, Jie, Wang, Zheng, and Wang]{dai2025automated}
+R.~Dai, J.~Jie, Z.~Wang, H.~Zheng, and W.~Wang.
+\newblock Automated surrogate-assisted particle swarm optimizer with an
+  adaptive parental guidance strategy for expensive engineering optimization
+  problems.
+\newblock \emph{Journal of Computational Design and Engineering}, 12\penalty0
+  (3):\penalty0 145--183, mar 2025.
+
+\bibitem[Dat et~al.(2025)Dat, Doan, and Binh]{dat2025hsevo}
+P.~V.~T. Dat, L.~Doan, and H.~T.~T. Binh.
+\newblock {HSEvo}: Elevating automatic heuristic design with diversity-driven
+  harmony search and genetic algorithm using {LLMs}.
+\newblock In \emph{Proceedings of the {AAAI} Conference on Artificial
+  Intelligence}, volume~39, pages 26931--26938, 2025.
+
+\bibitem[Deb et~al.(2002)Deb, Pratap, Agarwal, and Meyarivan]{deb2002fast}
+Kalyanmoy Deb, Amrit Pratap, Sameer Agarwal, and T.~Meyarivan.
+\newblock A fast and elitist multiobjective genetic algorithm: {NSGA-II}.
+\newblock \emph{IEEE Transactions on Evolutionary Computation}, 6\penalty0
+  (2):\penalty0 182--197, apr 2002.
+
+\bibitem[Dong et~al.(2024)Dong, Gao, Lin, and Li]{dong2024benchmarking}
+H.~Dong, L.~Gao, Q.~Lin, and M.~Li.
+\newblock Benchmarking evolutionary algorithms on constrained mixed-variable
+  multi-objective optimization problems.
+\newblock \emph{Swarm and Evolutionary Computation}, 86:\penalty0 101511, 2024.
+
+\bibitem[Feng et~al.(2025)Feng, Szajnfarber, and Panchal]{feng2025guiding}
+W.~B. Feng, Z.~Szajnfarber, and J.~H. Panchal.
+\newblock Guiding large language models ({LLMs}) through the engineering design
+  process.
+\newblock In \emph{Proceedings of the {AI4SE} \& {SE4AI} Workshop}, Washington,
+  DC, USA, sep 2025.
+
+\bibitem[Kallumadil et~al.(2024)]{kallumadil2024large}
+T.~D. Kallumadil et~al.
+\newblock Large language models for scientific discovery and engineering
+  design.
+\newblock \emph{Nature Reviews Materials}, 9:\penalty0 600--615, 2024.
+
+\bibitem[Liu et~al.(2024)Liu, Adriaenssens, and G]{liu2024generative}
+J.~Liu, S.~M.~H. Adriaenssens, and J.~K. G.
+\newblock Generative {AI} for engineering design: A review.
+\newblock \emph{Computer-Aided Design}, 173:\penalty0 103770, 2024.
+
+\bibitem[Liu et~al.(2025)]{liu2025generative}
+J.~Liu et~al.
+\newblock Generative {AI}, large language models, and {ChatGPT} in construction
+  education, training, and practice.
+\newblock \emph{Journal of Construction Engineering and Management},
+  151\penalty0 (3):\penalty0 04025001, 2025.
+
+\bibitem[Liu et~al.(2023)Liu, Wang, Zhang, and Zhang]{liu2023moead}
+Q.~Liu, R.~Wang, K.~Zhang, and T.~Zhang.
+\newblock {MOEA/D} with dynamic resource allocation for mixed-variable
+  multiobjective optimization problems.
+\newblock \emph{IEEE Transactions on Evolutionary Computation}, 27\penalty0
+  (5):\penalty0 1436--1450, oct 2023.
+
+\bibitem[Min et~al.(2025)Min, Cho, Jang, and Kang]{min2025revolution}
+K.~Min, K.~Cho, J.~Jang, and S.~Kang.
+\newblock {REvolution}: An evolutionary framework for {RTL} generation driven
+  by large language models.
+\newblock \emph{arXiv preprint arXiv:2510.21407}, oct 2025.
+\newblock Accepted to ASP-DAC 2026.
+
+\bibitem[Savsani et~al.(2021)Savsani, Dave, Raja, and
+  Patel]{savsani2021topology}
+V.~Savsani, P.~Dave, B.~D. Raja, and V.~Patel.
+\newblock Topology optimization of an offshore jacket structure considering
+  aerodynamic, hydrodynamic and structural forces.
+\newblock \emph{Engineering with Computers}, 37:\penalty0 2911--2930, 2021.
+
+\bibitem[Wang et~al.(2023)Wang, Wang, Sun, and Shi]{wang2023multi}
+Y.~Wang, Z.~Wang, Z.~Sun, and W.~Shi.
+\newblock Multi-objective optimization of offshore wind turbine jacket
+  structures based on surrogate model and {NSGA-II}.
+\newblock \emph{Renewable Energy}, 216:\penalty0 119028, 2023.
+
+\bibitem[Wu et~al.(2024)Wu, Yuan, Lin, Li, Wu, and He]{wu2024prompt}
+C.~Wu, J.~Yuan, Z.~Lin, C.~Li, H.~Wu, and X.~He.
+\newblock {Prompt-MolOpt}: Prompt-based multi-objective molecular optimization.
+\newblock In \emph{Proceedings of the International Conference on Learning
+  Representations ({ICLR})}, 2024.
+
+\bibitem[Yang et~al.(2024)Yang, Wang, Lu, Liu, Le, Zhou, and
+  Chen]{yang2024large}
+C.~Yang, X.~Wang, Y.~Lu, H.~Liu, Q.~V. Le, D.~Zhou, and X.~Chen.
+\newblock Large language models as optimizers.
+\newblock In \emph{Proceedings of the International Conference on Learning
+  Representations ({ICLR})}, 2024.
+
+\bibitem[Zhang and Li(2007)]{zhang2007moead}
+Qingfu Zhang and Hui Li.
+\newblock {MOEA/D}: A multiobjective evolutionary algorithm based on
+  decomposition.
+\newblock \emph{IEEE Transactions on Evolutionary Computation}, 11\penalty0
+  (6):\penalty0 712--731, dec 2007.
+
+\bibitem[Zheng et~al.(2023)Zheng, Li, and Xiao]{zheng2023efficient}
+S.~Zheng, C.~Li, and Y.~Xiao.
+\newblock Efficient optimization design method of jacket structures for
+  offshore wind turbines.
+\newblock \emph{Marine Structures}, 89:\penalty0 103372, 2023.
+
+\bibitem[Zhou et~al.(2025)Zhou, Liu, Fang, and Li]{zhou2025topology}
+J.~Zhou, Q.~Liu, T.~Fang, and G.~Li.
+\newblock A topology optimization method for metallic flexible disk coupling
+  based on fatigue constraints.
+\newblock \emph{Structural and Multidisciplinary Optimization}, 68\penalty0
+  (4):\penalty0 112, 2025.
+
+\end{thebibliography}

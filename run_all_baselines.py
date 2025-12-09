@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Batch Baseline Runner with Seed Reset (Multi-Problem Support)
-批量运行所有baseline实验，支持四种SACS优化问题，每次运行前自动重置SACS初始种子文件
+Batch Experiment Runner with Seed Reset (Multi-Problem Support)
+批量运行所有实验（baseline + MOLLM），支持四种SACS优化问题，每次运行前自动重置SACS初始种子文件
 
 Usage:
-    # Run all baselines for section_jk problem
+    # Run all algorithms (baselines + MOLLM) for section_jk problem
     python run_all_baselines.py --problem section_jk
     
-    # Run specific baselines for geo_jk problem
-    python run_all_baselines.py --problem geo_jk --baselines ga nsga2
+    # Run specific algorithms for geo_jk problem
+    python run_all_baselines.py --problem geo_jk --algorithms ga nsga2 mollm
     
-    # Run one baseline with multiple seeds for section_pf
-    python run_all_baselines.py --problem section_pf --baselines ga --seeds 42 43 44
+    # Run only MOLLM for section_pf
+    python run_all_baselines.py --problem section_pf --algorithms mollm --seeds 42 43 44
     
-    # Run all problems with all baselines (WARNING: very long runtime)
+    # Run all problems with all algorithms (WARNING: very long runtime)
     python run_all_baselines.py --problem all
     
     # Dry run (test without actually running)
@@ -71,14 +71,20 @@ SACS_PROBLEMS = {
 
 PROJECT_ROOT = Path(__file__).parent.absolute()
 
-# Available baselines
-BASELINES = {
-    'ga': 'baseline_ga.py',
-    'sms': 'baseline_sms.py',
-    'nsga2': 'baseline_nsga2.py',
-    'moead': 'baseline_moead.py',
-    'rs': 'baseline_rs.py',
+# Available algorithms (baselines + MOLLM)
+ALGORITHMS = {
+    # Baseline algorithms
+    'ga': {'script': 'baseline_ga.py', 'type': 'baseline'},
+    'sms': {'script': 'baseline_sms.py', 'type': 'baseline'},
+    'nsga2': {'script': 'baseline_nsga2.py', 'type': 'baseline'},
+    'moead': {'script': 'baseline_moead.py', 'type': 'baseline'},
+    'rs': {'script': 'baseline_rs.py', 'type': 'baseline'},
+    # MOLLM
+    'mollm': {'script': 'main.py', 'type': 'mollm'},
 }
+
+# Backward compatibility
+BASELINES = {k: v['script'] for k, v in ALGORITHMS.items() if v['type'] == 'baseline'}
 
 # Default random seeds
 DEFAULT_SEEDS = [42]
@@ -140,27 +146,29 @@ def reset_sacs_seed(problem_key):
         log_message(f"ERROR: Failed to reset SACS seed file: {e}", "ERROR")
         return False
 
-def run_baseline(baseline_name, problem_key, seed, dry_run=False, skip_reset=False):
-    """Run a single baseline experiment for specified problem"""
-    if baseline_name not in BASELINES:
-        log_message(f"ERROR: Unknown baseline '{baseline_name}'", "ERROR")
+def run_algorithm(algorithm_name, problem_key, seed, dry_run=False, skip_reset=False):
+    """Run a single algorithm experiment (baseline or MOLLM) for specified problem"""
+    if algorithm_name not in ALGORITHMS:
+        log_message(f"ERROR: Unknown algorithm '{algorithm_name}'", "ERROR")
         return False
     
     if problem_key not in SACS_PROBLEMS:
         log_message(f"ERROR: Unknown problem '{problem_key}'", "ERROR")
         return False
     
-    script = BASELINES[baseline_name]
+    algo_info = ALGORITHMS[algorithm_name]
+    script = algo_info['script']
+    algo_type = algo_info['type']
     script_path = PROJECT_ROOT / script
     problem = SACS_PROBLEMS[problem_key]
     config_path = problem['config_path']
     
     if not script_path.exists():
-        log_message(f"ERROR: Baseline script not found: {script_path}", "ERROR")
+        log_message(f"ERROR: Script not found: {script_path}", "ERROR")
         return False
     
     log_message(f"="*80)
-    log_message(f"Starting: {baseline_name.upper()} | {problem['name']} (seed={seed})")
+    log_message(f"Starting: {algorithm_name.upper()} ({algo_type}) | {problem['name']} (seed={seed})")
     log_message(f"Script: {script}")
     log_message(f"Config: {config_path}")
     log_message(f"="*80)
@@ -173,17 +181,23 @@ def run_baseline(baseline_name, problem_key, seed, dry_run=False, skip_reset=Fal
     # Reset seed file before each run (unless skipped)
     if not skip_reset:
         if not reset_sacs_seed(problem_key):
-            log_message(f"ERROR: Failed to reset seed file, skipping {baseline_name}", "ERROR")
+            log_message(f"ERROR: Failed to reset seed file, skipping {algorithm_name}", "ERROR")
             return False
     
-    # Run the baseline
-    cmd = [sys.executable, str(script_path), config_path, "--seed", str(seed)]
+    # Build command based on algorithm type
+    if algo_type == 'mollm':
+        # MOLLM uses main.py with config path
+        cmd = [sys.executable, str(script_path), config_path, "--seed", str(seed)]
+    else:
+        # Baselines use their own scripts
+        cmd = [sys.executable, str(script_path), config_path, "--seed", str(seed)]
+    
     log_message(f"Executing: {' '.join(cmd)}")
     
     start_time = time.time()
     
     # Create output log file with problem identifier
-    output_log = PROJECT_ROOT / f"logs/{problem_key}_{baseline_name}_seed{seed}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    output_log = PROJECT_ROOT / f"logs/{problem_key}_{algorithm_name}_seed{seed}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     output_log.parent.mkdir(exist_ok=True)
     
     try:
@@ -211,11 +225,11 @@ def run_baseline(baseline_name, problem_key, seed, dry_run=False, skip_reset=Fal
         elapsed = time.time() - start_time
         
         if return_code == 0:
-            log_message(f"✓ {baseline_name.upper()} completed successfully in {elapsed/3600:.2f} hours", "SUCCESS")
+            log_message(f"✓ {algorithm_name.upper()} completed successfully in {elapsed/3600:.2f} hours", "SUCCESS")
             log_message(f"  Output saved to: {output_log}")
             return True
         else:
-            log_message(f"✗ {baseline_name.upper()} failed with return code {return_code}", "ERROR")
+            log_message(f"✗ {algorithm_name.upper()} failed with return code {return_code}", "ERROR")
             log_message(f"  Check log for details: {output_log}")
             return False
             
@@ -227,20 +241,20 @@ def run_baseline(baseline_name, problem_key, seed, dry_run=False, skip_reset=Fal
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Batch runner for SACS baseline experiments (Multi-Problem Support)",
+        description="Batch runner for SACS experiments (Baselines + MOLLM, Multi-Problem Support)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run all baselines for section_jk problem
+  # Run all algorithms (baselines + MOLLM) for section_jk problem
   python run_all_baselines.py --problem section_jk
   
-  # Run specific baselines for geo_jk problem
-  python run_all_baselines.py --problem geo_jk --baselines ga sms
+  # Run specific algorithms for geo_jk problem
+  python run_all_baselines.py --problem geo_jk --algorithms ga sms mollm
   
-  # Run GA with multiple seeds for section_pf
-  python run_all_baselines.py --problem section_pf --baselines ga --seeds 42 43 44
+  # Run only MOLLM with multiple seeds for section_pf
+  python run_all_baselines.py --problem section_pf --algorithms mollm --seeds 42 43 44
   
-  # Run all problems with all baselines (WARNING: very long runtime)
+  # Run all problems with all algorithms (WARNING: very long runtime)
   python run_all_baselines.py --problem all
   
   # Test without actually running
@@ -256,11 +270,20 @@ Examples:
     )
     
     parser.add_argument(
+        '--algorithms',
+        nargs='+',
+        choices=list(ALGORITHMS.keys()) + ['all'],
+        default=['all'],
+        help='Which algorithms to run: baselines (ga, sms, nsga2, moead, rs) or mollm (default: all)'
+    )
+    
+    # Keep --baselines for backward compatibility
+    parser.add_argument(
         '--baselines',
         nargs='+',
         choices=list(BASELINES.keys()) + ['all'],
-        default=['all'],
-        help='Which baselines to run (default: all)'
+        default=None,
+        help='[DEPRECATED] Use --algorithms instead. Which baselines to run (default: all)'
     )
     
     parser.add_argument(
@@ -291,20 +314,33 @@ Examples:
     else:
         problems_to_run = [args.problem]
     
-    # Determine which baselines to run
-    if 'all' in args.baselines:
-        baselines_to_run = list(BASELINES.keys())
+    # Determine which algorithms to run (handle backward compatibility)
+    if args.baselines is not None:
+        log_message("WARNING: --baselines is deprecated, use --algorithms instead", "WARNING")
+        algorithms_to_run = args.baselines if 'all' not in args.baselines else list(BASELINES.keys())
     else:
-        baselines_to_run = args.baselines
+        if 'all' in args.algorithms:
+            algorithms_to_run = list(ALGORITHMS.keys())
+        else:
+            algorithms_to_run = args.algorithms
     
     # Print configuration
     log_message("="*80)
-    log_message("SACS Baseline Experiment Batch Runner (Multi-Problem)")
+    log_message("SACS Experiment Batch Runner (Baselines + MOLLM, Multi-Problem)")
     log_message("="*80)
     log_message(f"Problems: {', '.join(problems_to_run)}")
     for prob in problems_to_run:
         log_message(f"  - {prob}: {SACS_PROBLEMS[prob]['description']}")
-    log_message(f"Baselines: {', '.join(baselines_to_run)}")
+    log_message(f"Algorithms: {', '.join(algorithms_to_run)}")
+    # Show algorithm types
+    algo_types = {}
+    for algo in algorithms_to_run:
+        algo_type = ALGORITHMS[algo]['type']
+        if algo_type not in algo_types:
+            algo_types[algo_type] = []
+        algo_types[algo_type].append(algo)
+    for algo_type, algos in algo_types.items():
+        log_message(f"  - {algo_type}: {', '.join(algos)}")
     log_message(f"Seeds: {args.seeds}")
     log_message(f"Dry run: {args.dry_run}")
     log_message(f"Skip seed reset: {args.skip_reset}")
@@ -312,7 +348,7 @@ Examples:
     log_message("="*80)
     
     # Calculate total experiments
-    total_experiments = len(problems_to_run) * len(baselines_to_run) * len(args.seeds)
+    total_experiments = len(problems_to_run) * len(algorithms_to_run) * len(args.seeds)
     log_message(f"Total experiments to run: {total_experiments}")
     
     if not args.dry_run:
@@ -330,16 +366,16 @@ Examples:
         log_message(f"Starting experiments for problem: {SACS_PROBLEMS[problem]['name']}")
         log_message(f"{'='*80}\n")
         
-        for baseline in baselines_to_run:
+        for algorithm in algorithms_to_run:
             for seed in args.seeds:
-                success = run_baseline(
-                    baseline, 
+                success = run_algorithm(
+                    algorithm, 
                     problem, 
                     seed, 
                     dry_run=args.dry_run,
                     skip_reset=args.skip_reset
                 )
-                results.append((problem, baseline, seed, success))
+                results.append((problem, algorithm, seed, success))
                 
                 # Brief pause between experiments
                 if not args.dry_run:
@@ -362,9 +398,10 @@ Examples:
     
     # Detailed results
     log_message("\nDetailed Results:")
-    for problem, baseline, seed, success in results:
+    for problem, algorithm, seed, success in results:
         status = "✓" if success else "✗"
-        log_message(f"  {status} {problem} | {baseline.upper()} (seed={seed})")
+        algo_type = ALGORITHMS[algorithm]['type']
+        log_message(f"  {status} {problem} | {algorithm.upper()} ({algo_type}) (seed={seed})")
     
     log_message("="*80)
     log_message(f"All experiments completed. Check {LOG_FILE} for details.")
