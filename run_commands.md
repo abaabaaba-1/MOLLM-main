@@ -1,19 +1,23 @@
 # Run Commands and Early-Stopping Notes
 
-## Primary Runs (LLM-driven MOO)
-- `python3 main.py problem/sacs_geo_jk/config.yaml --seed 42`
-- `python3 main.py problem/sacs_geo_pf/config.yaml --seed 80`
-- `python3 main.py problem/sacs_section_pf/config.yaml --seed 90`
-- (optional robustness) `python3 main.py problem/sacs_section_jk/config.yaml --seed 42`
+## Primary Runs (LLM-driven MOO) — only missing seeds
+- `python3 main.py problem/sacs_geo_jk/config.yaml --seed 42`   # 重跑并跑满预算
+- `python3 main.py problem/sacs_geo_jk/config.yaml --seed 60`
+- `python3 main.py problem/sacs_geo_jk/config.yaml --seed 62`
+- `python3 main.py problem/sacs_geo_jk/config.yaml --seed 101`
+- `python3 main.py problem/sacs_geo_pf/config.yaml --seed 90`
+- `python3 main.py problem/sacs_geo_pf/config.yaml --seed 101`
+- `python3 main.py problem/sacs_section_pf/config.yaml --seed 90`  # mollm 补 seed 90
 
-## Baseline Comparisons (optional)
-Use the same config paths as above, replacing the command as needed:
-- `python3 baseline_ga.py --config problem/sacs_section_pf/config.yaml --seed 90`
-- `python3 baseline_nsga2.py --config problem/sacs_section_pf/config.yaml --seed 90`
-- `python3 baseline_sms.py --config problem/sacs_section_pf/config.yaml --seed 90`
-- Repeat for `sacs_geo_pf`, `sacs_geo_jk`, `sacs_section_jk` with desired seeds.
+## Baseline Comparisons (only missing seeds)
+- GA: `python3 baseline_ga.py --config problem/sacs_geo_pf/config.yaml --seed 90`
+- GA: `python3 baseline_ga.py --config problem/sacs_geo_pf/config.yaml --seed 101`
+- GA: `python3 baseline_ga.py --config problem/sacs_section_pf/config.yaml --seed 80`
+- GA: `python3 baseline_ga.py --config problem/sacs_section_pf/config.yaml --seed 101`
+- NSGA2: 将上述命令中的 `baseline_ga.py` 替换为 `baseline_nsga2.py`
+- SMSEMOA: 将上述命令中的 `baseline_ga.py` 替换为 `baseline_sms.py`
 
-## Early-Stopping Behavior
-- `sacs_geo_jk`, `sacs_section_jk`: `early_stopping: False` in config; will run to `optimization.eval_budget` unless externally interrupted.
-- `sacs_section_pf`, `sacs_geo_pf`: default early stopping is enabled in `MOO` (stops if `avg_top100` improves < 1e-4 for 6 consecutive logs and old score > 0.05). To force full budget, add `early_stopping: False` to their configs before running.
-- Baseline scripts honor `baseline_early_stopping` in configs (e.g., jk configs set it to `False`).
+## Notes
+- `sacs_geo_jk`, `sacs_section_jk`: `early_stopping: False`，应跑满预算。
+- `sacs_section_pf`, `sacs_geo_pf`: 请在 config 中设 `early_stopping: False` 确保跑满 2000 预算。
+- Baseline 早停取决于 config 的 `baseline_early_stopping`；如需全程，设为 `False`。

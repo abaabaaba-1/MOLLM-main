@@ -40,7 +40,8 @@ SACS_PROBLEMS = {
         'seed_backup': r"D:\wsl_sacs_exchange\sacs_project\sacinp.demo06",
         'working_dir': r"D:\wsl_sacs_exchange\sacs_project\Demo06_Section",
         'target_file': "sacinp.demo06",
-        'config_path': "problem/sacs_section_jk/config.yaml",
+        # NOTE: ConfigLoader will prepend 'problem/', so we pass path relative to problem/
+        'config_path': "sacs_section_jk/config.yaml",
         'description': '截面优化（导管架模型，Demo06）'
     },
     'section_pf': {
@@ -48,7 +49,8 @@ SACS_PROBLEMS = {
         'seed_backup': r"D:\wsl_sacs_exchange\sacs_project\sacinp.demo13",
         'working_dir': r"D:\wsl_sacs_exchange\sacs_project\Demo13_Section",
         'target_file': "sacinp.demo13",
-        'config_path': "problem/sacs_section_pf/config.yaml",
+        # NOTE: ConfigLoader will prepend 'problem/', so we pass path relative to problem/
+        'config_path': "sacs_section_pf/config.yaml",
         'description': '截面优化（平台模型，Demo13）'
     },
     'geo_jk': {
@@ -56,7 +58,8 @@ SACS_PROBLEMS = {
         'seed_backup': r"D:\wsl_sacs_exchange\sacs_project\sacinp.demo06",
         'working_dir': r"D:\wsl_sacs_exchange\sacs_project\Demo06_Geo",
         'target_file': "sacinp.demo06",
-        'config_path': "problem/sacs_geo_jk/config.yaml",
+        # NOTE: ConfigLoader will prepend 'problem/', so we pass path relative to problem/
+        'config_path': "sacs_geo_jk/config.yaml",
         'description': '几何优化（导管架模型，Demo06）'
     },
     'geo_pf': {
@@ -64,7 +67,8 @@ SACS_PROBLEMS = {
         'seed_backup': r"D:\wsl_sacs_exchange\sacs_project\sacinp.demo13",
         'working_dir': r"D:\wsl_sacs_exchange\sacs_project\Demo13_Geo",
         'target_file': "sacinp.demo13",
-        'config_path': "problem/sacs_geo_pf/config.yaml",
+        # NOTE: ConfigLoader will prepend 'problem/', so we pass path relative to problem/
+        'config_path': "sacs_geo_pf/config.yaml",
         'description': '几何优化（平台模型，Demo13）'
     }
 }

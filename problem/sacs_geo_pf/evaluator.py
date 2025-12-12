@@ -451,24 +451,23 @@ class RewardingSystem:
             transformed['weight'] = 1.0 - weight_norm
 
         # --- 2. UC Transformations ---
-        # Following JK model's strict constraint approach:
-        # - UC range [0, 1] enforces feasibility requirement (UC ≤ 1.0)
-        # - Values > 1.0 are clipped, discouraging infeasible designs
-        # - Combined with weight penalty, this guides optimizer toward feasible solutions
-        # This ensures all optimized designs are engineering-viable.
-        uc_min, uc_max = 0.0, 1.0
+        # Keep axial UC capped at 1.0 (feasibility threshold), but allow bending UC to vary up to 2.0
+        # to avoid full clipping when bending UC is mildly infeasible.
+        uc_min = 0.0
+        axial_uc_max = 1.0
+        bending_uc_max = 2.0
 
-        axial_uc = np.clip(penalized_results.get('axial_uc_max', uc_max), uc_min, uc_max)
+        axial_uc = np.clip(penalized_results.get('axial_uc_max', axial_uc_max), uc_min, axial_uc_max)
         if self.obj_directions.get('axial_uc_max') == 'min':
-            transformed['axial_uc_max'] = (axial_uc - uc_min) / (uc_max - uc_min)
+            transformed['axial_uc_max'] = (axial_uc - uc_min) / (axial_uc_max - uc_min)
         else:
-            transformed['axial_uc_max'] = (uc_max - axial_uc) / (uc_max - uc_min)
+            transformed['axial_uc_max'] = (axial_uc_max - axial_uc) / (axial_uc_max - uc_min)
 
-        bending_uc = np.clip(penalized_results.get('bending_uc_max', uc_max), uc_min, uc_max)
+        bending_uc = np.clip(penalized_results.get('bending_uc_max', bending_uc_max), uc_min, bending_uc_max)
         if self.obj_directions.get('bending_uc_max') == 'min':
-            transformed['bending_uc_max'] = (bending_uc - uc_min) / (uc_max - uc_min)
+            transformed['bending_uc_max'] = (bending_uc - uc_min) / (bending_uc_max - uc_min)
         else:
-            transformed['bending_uc_max'] = (uc_max - bending_uc) / (uc_max - uc_min)
+            transformed['bending_uc_max'] = (bending_uc_max - bending_uc) / (bending_uc_max - uc_min)
 
         for key, val in transformed.items():
             transformed[key] = np.clip(val, 0.0, 1.0)

@@ -30,3 +30,14 @@ python run_all_baselines.py --problem geo_jk
 
 # 5️⃣ 多随机种子统计（50-75小时）
 python run_all_baselines.py --problem geo_jk --seeds 42 43 44 45 46
+
+
+几何 JK（MOLLM 42/60/62/101，已删除旧文件）：已在宿舍运行
+python3 run_all_baselines.py --problem geo_jk --algorithms mollm --seeds 42 60 62 101
+
+几何 PF（MOLLM+基线 80/90/101 已清空）：80已运行
+python3 run_all_baselines.py --problem geo_pf --algorithms mollm ga nsga2 sms --seeds 80 90 101
+截面 PF（MOLLM+基线 80/90/101 已清空）：
+python3 run_all_baselines.py --problem section_pf --algorithms mollm ga nsga2 sms --seeds 80 90 101
+截面 JK（MOLLM seeds 42/43/44 已清空）：
+python3 run_all_baselines.py --problem section_jk --algorithms mollm --seeds 42 43 44

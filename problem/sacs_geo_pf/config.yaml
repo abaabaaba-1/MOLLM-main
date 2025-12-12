@@ -5,7 +5,10 @@ description: "Optimizing SACS platform structure geometry (joint locations) usin
 save_dir: "./moo_results/"
 save_suffix: "sacs_geo_pf"
 
+# Continue from the latest checkpoint when rerunning
 resume: False
+
+early_stopping: False
 
 model:
   name: zgca,gemini-2.5-flash-nothinking
@@ -17,6 +20,9 @@ model:
   mutation_prob: 0.3
   explore_prob: 0
 use_au: False
+
+baseline_early_stopping:
+  enable: False
 
 
 goals: [weight, axial_uc_max, bending_uc_max]
@@ -110,7 +116,7 @@ sacs:
 
 optimization:
   pop_size: 40
-  eval_budget: 5000
+  eval_budget: 2000
   log_freq: 100
   mutation_strategy:
     joint_mutation_amplitudes:
